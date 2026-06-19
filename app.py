@@ -294,12 +294,13 @@ if submitted:
                 st.error(f"파일 생성 중 오류 발생: {e}")
 
     # [개선] 다운로드 중 화면 초기화 현상을 방지하기 위해 생성 버튼 외부에 독립 배치
-    if st.session_state.generated_doc:
-        st.write("")
-        st.download_button(
-            label="📥 완성본 다운로드", 
-            data=st.session_state.generated_doc["data"], 
-            file_name=st.session_state.generated_doc["name"],
-            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-            use_container_width=True
-        )
+        if st.session_state.generated_doc:
+            st.write("")
+            st.download_button(
+                label="📥 완성본 다운로드", 
+                data=st.session_state.generated_doc["data"], 
+                file_name=st.session_state.generated_doc["name"],
+                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                use_container_width=True
+            )
+   

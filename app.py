@@ -61,23 +61,36 @@ if st.session_state.step == 1:
 
     if "법인" in party_choice:
         st.divider()
-        is_annual_target = st.radio(
-            "2-1. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
+        # [신규 추가] 신규계약 vs 변경계약 질문
+        nature_choice = st.radio(
+            "2. 계약의 성격이 무엇입니까?"
+            ["신규계약(신규 거래)", "변경계약(기존 계약의 조건 변경)"]
+            key="q_party"
+        )
+
+        if "변경" in nature_choice:
+            st.session_state.is_amend = True
+            st.success("✅ **[변경계약서]** 양식을 적용합니다.")
+        else:
+            st.session_state.is_amend = False
+            is_annual_target = st.radio(
+            "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
             ["예 (기존 체결완료)", "아니오 (미체결)"], 
             index=1
-        )
-        
-        if is_annual_target == "예 (기존 체결완료)":
-            st.info("✅ 이미 연간계약이 되어 있으므로 **[개별계약서]**를 생성합니다.")
-            st.session_state.is_annual = False
-        else:
-            st.warning("⚠️ 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
-            sub_choice = st.radio(
-                "2-2. 어떤 계약을 진행하시겠습니까?", 
-                ["기본계약_연간계약 체결", "표준계약_개별계약 체결"]
             )
-            st.session_state.is_annual = ("연간계약" in sub_choice)
+
+            if is_annual_target == "예 (기존 체결완료)":
+                st.info("✅ 이미 연간계약이 되어 있으므로 **[개별계약서]**를 생성합니다.")
+                st.session_state.is_annual = False
+            else:
+                st.warning("⚠️ 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
+                sub_choice = st.radio(
+                    "어떤 계약을 진행하시겠습니까?", 
+                    ["기본계약_연간계약 체결", "표준계약_개별계약 체결"]
+                )
+                st.session_state.is_annual = ("연간계약" in sub_choice)
     else:
+        st.session_state.is_amend = False
         st.session_state.is_annual = False
 
     if st.button("정보 입력 단계로 이동 ➡️"):

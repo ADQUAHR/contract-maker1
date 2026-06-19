@@ -224,6 +224,6 @@ elif st.session_state.step == 2:
                 bio = io.BytesIO()
                 doc.save(bio)
                 st.success("🎉 계약서 생성이 완료되었습니다!")
-                st.download_button(label="📥 완성본 다운로드", data=bio.getvalue(), file_name=f"{project_name}_{partner_name}_{contract_period}.docx")
+                st.download_button(label="📥 완성본 다운로드", data=bio.getvalue(), file_name=f"{project_name}_{partner_name}_{contract_start}.docx")
             except Exception as e:
                 st.error(f"파일 생성 중 오류 발생: {e}")

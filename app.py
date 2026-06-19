@@ -162,6 +162,8 @@ elif st.session_state.step == 2:
         bank = st.text_input("은행명")
         bank_account = st.text_input("계좌번호")
         account_holder = st.text_input("예금주")
+        help=f"대금 지급 오류 방지를 위해 반드시 계약자 명의와 일치하는지 확인해주세요."
+        )
 
 
     # --- [D. 요약 테이블] ---
@@ -223,6 +225,6 @@ elif st.session_state.step == 2:
                 bio = io.BytesIO()
                 doc.save(bio)
                 st.success("🎉 계약서 생성이 완료되었습니다!")
-                st.download_button(label="📥 완성본 다운로드", data=bio.getvalue(), file_name=f"계약서_{partner_name}.docx")
+                st.download_button(label="📥 완성본 다운로드", data=bio.getvalue(), file_name=f"{project_name}_{partner_name}_{contract_period}.docx")
             except Exception as e:
                 st.error(f"파일 생성 중 오류 발생: {e}")

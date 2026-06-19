@@ -262,25 +262,12 @@ elif st.session_state.step == 2:
                 date_fmt = "%Y년 %m월 %d일"
                 
                 context = {
-                    " project_name ": project_name,
-                    " project_code ": project_code,
-                    " contract_title ": contract_title,
-                    " amount_val ": f"{amount_val:,}",
-                    " amount_kr ": amount_kr,
-                    " contract_period ": contract_start.strftime(date_fmt),
-                    " delivery_date ": delivery_date_val.strftime(date_fmt),
-                    " partner_name ": partner_name,
-                    " partner_address ": partner_address,
-                    " bank ": bank,
-                    " bank_account ": bank_account,
-                    " account_holder ": account_holder,
-                    " prepay_amount ": f"{prepay_val:,}" if prepay_val > 0 else "0",
-                    " prepay_rate ": prepay_rate,    # {{ prepay_rate }} 에 대응
-                    " prepay_date ": prepay_date.strftime(date_fmt) if prepay_date else "-",
-                    
-                    " balance_amount ": f"{balance_val:,}",
-                    " balance_rate ": balance_rate,  # {{ balance_rate }} 에 대응
-                    " balance_date ": balance_date.strftime(date_fmt) if balance_date else "-"
+                    "project_name": project_name, "project_code": project_code, "contract_title": contract_title,
+                    "amount_val": f"{amount_val:,}", "amount_kr": amount_kr,
+                    "contract_period": contract_start.strftime(date_fmt),
+                    "delivery_date": delivery_date_val.strftime(date_fmt),
+                    "partner_name": partner_name, "partner_address": partner_address,
+                    "bank": bank, "bank_account": bank_account, "account_holder": account_holder
                 }
 
                 if st.session_state.contract_party == "individual":

@@ -264,7 +264,7 @@ elif st.session_state.step == 2:
                 context = {
                     "project_name": project_name, "project_code": project_code, "contract_title": contract_title,
                     "amount_val": f"{amount_val:,}", "amount_kr": amount_kr,
-                    "contract_period": contract_start.strftime(date_fmt),
+                    "contract_start": contract_start.strftime(date_fmt),
                     "delivery_date": delivery_date_val.strftime(date_fmt),
                     "partner_name": partner_name, "partner_address": partner_address,
                     "bank": bank, "bank_account": bank_account, "account_holder": account_holder

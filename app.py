@@ -226,7 +226,7 @@ elif st.session_state.step == 2:
     submitted = st.button("📄 위 내용으로 계약서 생성하기", type="primary", use_container_width=True)
 
     # --- [C. 생성 및 검증 로직] ---
-if submitted:
+    if submitted:
         if not project_name or not partner_name or amount_val == 0:
             st.error("❌ 필수 정보(프로젝트명, 상대방, 계약금액)를 모두 입력해주세요.")
         elif st.session_state.contract_party == "corporation" and (prepay_val + balance_val != amount_val):

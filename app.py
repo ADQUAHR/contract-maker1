@@ -209,7 +209,7 @@ elif st.session_state.step == 2:
     st.subheader("📋 입력 정보 요약 확인")
 
     if prepay_val > 0:
-        payment_detail = f"\u00A0(선금:\u00A0{prepay_val:,}원,\u00A0잔금:\u00A0{balance_val:,}원)"
+        payment_detail = f"\n- 선금: {prepay_val:,}원\n- 잔금: {balance_val:,}원" if prepay_val > 0 else ""
     else:
         payment_detail = ""
     

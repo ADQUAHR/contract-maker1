@@ -206,7 +206,10 @@ elif st.session_state.step == 2:
     st.divider()
     st.subheader("📋 입력 정보 요약 확인")
 
-    payment_detail = f" (선금: {prepay_val:,}원, 잔금: {balance_val:,}원)" if prepay_val > 0 else ""
+    if prepay_val > 0:
+    payment_detail = f"\u00A0(선금:\u00A0{prepay_val:,}원,\u00A0잔금:\u00A0{balance_val:,}원)"
+    else:
+    payment_detail = ""
     
     summary_data = [
         {"항목": "프로젝트명", "내용": project_name},

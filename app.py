@@ -163,7 +163,6 @@ elif st.session_state.step == 2:
         bank_account = st.text_input("계좌번호")
         account_holder = st.text_input("예금주")
         help=f"대금 지급 오류 방지를 위해 반드시 계약자 명의와 일치하는지 확인해주세요."
-        )
 
 
     # --- [D. 요약 테이블] ---

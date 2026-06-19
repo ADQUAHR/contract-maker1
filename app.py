@@ -171,8 +171,7 @@ elif st.session_state.step == 2:
 
     if st.session_state.contract_party == "corporation":
         st.subheader("💵 대금 지급 세부 일정")
-        st.caption("선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 "0"을 입력해주세요. 
-        선금+잔금의 합은 총 계약금액과 일치해야 합니다.")
+        st.caption("선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 0을 입력해주세요. 선금+잔금의 합은 총 계약금액과 일치해야 합니다.")
         p_col1, p_col2 = st.columns(2)
         with p_col1:
             prepay_val = st.number_input("선금 금액", min_value=0, value=0)

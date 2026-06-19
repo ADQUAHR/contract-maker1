@@ -268,6 +268,7 @@ elif st.session_state.step == 2:
                     "delivery_date": delivery_date_val.strftime(date_fmt),
                     "partner_name": partner_name, "partner_address": partner_address,
                     "bank": bank, "bank_account": bank_account, "account_holder": account_holder
+                    "prepay_rate": prepay_rate, "balance_rate": balance_rate
                 }
 
                 if st.session_state.contract_party == "individual":

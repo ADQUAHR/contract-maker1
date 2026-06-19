@@ -290,7 +290,7 @@ elif st.session_state.step == 2:
                     "name": f"{project_name}_{partner_name}_{file_string_date}.docx",
                     "data": bio.getvalue()
                 }
-                st.success("🎉 계약서 생성이 완료되었습니다! 아래 다운로드 버튼을 눌러주세요.")
+                st.success("🎉 계약서 생성이 완료되었습니다! 계약서 초안을 다운받은 후 [별첨1]을 추가로 작성해서 마무리해주세요.")
                 
             except Exception as e:
                 st.error(f"파일 생성 중 오류 발생: {e}")
@@ -299,7 +299,7 @@ elif st.session_state.step == 2:
         if st.session_state.generated_doc:
             st.write("")
             st.download_button(
-                label="📥 완성본 다운로드", 
+                label="📥 계약서초안 다운로드", 
                 data=st.session_state.generated_doc["data"], 
                 file_name=st.session_state.generated_doc["name"],
                 mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",

@@ -264,8 +264,6 @@ elif st.session_state.step == 2:
                     if amount_val > 0:
                         p_rate_calc = (prepay_val / amount_val) * 100
                         b_rate_calc = (balance_val / amount_val) * 100
-                        
-                        # 소수점 첫째 자리까지 표기하되, .0%로 떨어지면 정수형태로 깔끔하게 변경
                         prepay_rate = f"{p_rate_calc:.1f}%".replace(".0%", "%")
                         balance_rate = f"{b_rate_calc:.1f}%".replace(".0%", "%")
                     else:

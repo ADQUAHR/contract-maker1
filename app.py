@@ -193,21 +193,11 @@ elif st.session_state.step == 2:
             balance_val = st.number_input("잔금 금액", min_value=0, value=(amount_val - prepay_val))
             balance_date = st.date_input("잔금 청구기일 (⚠️ 납품 예정일과 동일하게 작성합니다.)")
 
-        # ─── 2. [위치 변경] 선금과 잔금 입력이 모두 끝난 직후에 비율을 계산합니다 ───
-        if amount_val > 0:
-            p_rate_calc = (prepay_val / amount_val) * 100
-            b_rate_calc = (balance_val / amount_val) * 100
-            p_rate_disp = f"{p_rate_calc:.1f}%".replace(".0%", "%")
-            b_rate_disp = f"{b_rate_calc:.1f}%".replace(".0%", "%")
-        else:
-            p_rate_disp, b_rate_disp = "0%", "0%"
-
-        # 3. 계산된 결과값을 남은 비활성화 칸에 실시간 매핑
         with p_col2:
-            st.text_input("선금 비율", value=p_rate_disp, disabled=True, key="disp_p_rate")
+            prepay_rate = st.text_input("선금 비율", value="0%", key="input_p_rate")
             
         with p_col4:
-            st.text_input("잔금 비율", value=b_rate_disp, disabled=True, key="disp_b_rate")
+            balance_rate = st.text_input("잔금 비율", value="0%", key="input_b_rate")
             
         if prepay_val + balance_val !=amount_val:
             st.warning(f"⚠️ 금액 불일치: 현재 합계 {prepay_val + balance_val:,}원 / 총 계약금액 {amount_val:,}원")

@@ -101,7 +101,7 @@ if st.session_state.step == 1:
                             st.info("✅ **[개별계약서]** 양식이 최종 확정되었습니다. 아래 이동 버튼을 눌러주세요.")
                         else:
                             # [4번 질문] (4번은 미체결 시 바로 고르는 구조이므로 초기 대기 없음)
-                            st.warning("⚠️ 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
+                            st.warning("⚠️ 기본계약 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
                             sub_choice = st.radio(
                                 "4. 어떤 계약을 진행하시겠습니까?", 
                                 ["기본계약_연간계약 체결", "표준계약_개별계약 체결"]
@@ -186,6 +186,8 @@ elif st.session_state.step == 2:
 
         if prepay_val + balance_val !=amount_val:
             st.warning(f"⚠️ 금액 불일치: 현재 합계 {prepay_val + balance_val:,}원 / 총 계약금액 {amount_val:,}원")
+        if delivery_date_val != balance_date:
+            st.warning(f"📅 날짜 확인 필요: 납품 예정일({delivery_date_val.strftime('%m/%d')})과 잔금 청구기일({balance_date.strftime('%m/%d')})이 일치하지 않습니다.")   
 
     st.divider()
     

@@ -226,15 +226,17 @@ elif st.session_state.step == 2:
     submitted = st.button("📄 위 내용으로 계약서 생성하기", type="primary", use_container_width=True)
 
     # --- [C. 생성 및 검증 로직] ---
-    if submitted:
+if submitted:
         if not project_name or not partner_name or amount_val == 0:
             st.error("❌ 필수 정보(프로젝트명, 상대방, 계약금액)를 모두 입력해주세요.")
         elif st.session_state.contract_party == "corporation" and (prepay_val + balance_val != amount_val):
             st.error(f"❌ 금액 불일치: 선금+잔금({prepay_val + balance_val:,})이 총 계약금액({amount_val:,})과 다릅니다.")
         else:
             try:
-                # 템플릿 선택
-                if st.session_state.contract_party == "individual":
+                # 템플릿 선택 (이전 단계 분기 반영)
+                if st.session_state.is_amend:
+                    t_name = "template_amend.docx"
+                elif st.session_state.contract_party == "individual":
                     t_name = "template_individual.docx"
                 else:
                     t_name = "template_corporation_annual.docx" if st.session_state.is_annual else "template_corp_single.docx"
@@ -255,15 +257,49 @@ elif st.session_state.step == 2:
                     context["partner_birth"] = partner_info
                 else:
                     context["partner_ceo"] = partner_info
-                    context["prepay_amount"] = format_ko_money(prepay_val)
-                    context["prepay_date"] = prepay_date.strftime(date_fmt)
-                    context["balance_amount"] = format_ko_money(balance_val)
-                    context["balance_date"] = balance_date.strftime(date_fmt)
+                    
+                    # ─── [신규 추가] 선금/잔금 청구율 자동 계산 및 포맷팅 ───
+                    if amount_val > 0:
+                        p_rate_calc = (prepay_val / amount_val) * 100
+                        b_rate_calc = (balance_val / amount_val) * 100
+                        
+                        # 소수점 첫째 자리까지 표기하되, .0%로 떨어지면 정수형태로 깔끔하게 변경
+                        prepay_rate = f"{p_rate_calc:.1f}%".replace(".0%", "%")
+                        balance_rate = f"{b_rate_calc:.1f}%".replace(".0%", "%")
+                    else:
+                        prepay_rate, balance_rate = "0%", "0%"
+                    
+                    # 수급사업자(법인) 세부 대금 정보 매핑
+                    context["prepay_amount"] = f"{prepay_val:,}" if prepay_val > 0 else "0"
+                    context["prepay_rate"] = prepay_rate    # 워드 템플릿 내 {{prepay_rate}} 대응
+                    context["prepay_date"] = prepay_date.strftime(date_fmt) if prepay_date else "-"
+                    
+                    context["balance_amount"] = f"{balance_val:,}"
+                    context["balance_rate"] = balance_rate  # 워드 템플릿 내 {{balance_rate}} 대응
+                    context["balance_date"] = balance_date.strftime(date_fmt) if balance_date else "-"
 
                 doc.render(context)
                 bio = io.BytesIO()
                 doc.save(bio)
-                st.success("🎉 계약서 생성이 완료되었습니다!")
-                st.download_button(label="📥 완성본 다운로드", data=bio.getvalue(), file_name=f"{project_name}_{partner_name}_{contract_start}.docx")
+                
+                # [개선] 생성된 파일을 세션 상태에 안정적으로 보관
+                file_string_date = contract_start.strftime("%Y%m%d")
+                st.session_state.generated_doc = {
+                    "name": f"{project_name}_{partner_name}_{file_string_date}.docx",
+                    "data": bio.getvalue()
+                }
+                st.success("🎉 계약서 생성이 완료되었습니다! 아래 다운로드 버튼을 눌러주세요.")
+                
             except Exception as e:
                 st.error(f"파일 생성 중 오류 발생: {e}")
+
+    # [개선] 다운로드 중 화면 초기화 현상을 방지하기 위해 생성 버튼 외부에 독립 배치
+    if st.session_state.generated_doc:
+        st.write("")
+        st.download_button(
+            label="📥 완성본 다운로드", 
+            data=st.session_state.generated_doc["data"], 
+            file_name=st.session_state.generated_doc["name"],
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True
+        )

@@ -56,34 +56,34 @@ if st.session_state.step == 1:
     party_choice = st.radio(
         "1. 계약 대상 주체가 누구인가요?",
         ["법인/사업자 (사업자등록 보유)", "개인 (사업자등록 미보유)"],
-        key="q_party"
+        key="q_party"  # <- 이 부분 뒤에 괄호가 잘 닫혔는지 확인하세요
     )
 
     if "법인" in party_choice:
         st.divider()
-        # [신규 추가] 신규계약 vs 변경계약 질문
+        # [수정 완료] 인자 구분을 위한 쉼표와 구조를 명확히 정렬했습니다.
         nature_choice = st.radio(
-            "2. 계약의 성격이 무엇입니까?"
-            ["신규계약(신규 거래)", "변경계약(기존 계약의 조건 변경)"]
-            key="q_party"
+            "2. 계약의 성격이 무엇입니까?",
+            ["신규계약 (신규 프로젝트)", "변경계약 (기존 계약의 조건 변경)"]
         )
-
+        
         if "변경" in nature_choice:
             st.session_state.is_amend = True
             st.success("✅ **[변경계약서]** 양식을 적용합니다.")
         else:
             st.session_state.is_amend = False
+            # 신규계약일 경우에만 연간계약 여부 질문
             is_annual_target = st.radio(
-            "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
-            ["예 (기존 체결완료)", "아니오 (미체결)"], 
-            index=1
+                "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
+                ["예 (기존 체결완료)", "아니오 (미체결)"], 
+                index=1
             )
-
+            
             if is_annual_target == "예 (기존 체결완료)":
-                st.info("✅ 이미 연간계약이 되어 있으므로 **[개별계약서]**를 생성합니다.")
+                st.info("✅ **[개별계약서]** 양식을 적용합니다.")
                 st.session_state.is_annual = False
             else:
-                st.warning("⚠️ 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
+                st.warning("⚠️ 미체결 업체입니다. 체결할 양식을 선택하세요.")
                 sub_choice = st.radio(
                     "어떤 계약을 진행하시겠습니까?", 
                     ["기본계약_연간계약 체결", "표준계약_개별계약 체결"]
@@ -96,8 +96,9 @@ if st.session_state.step == 1:
     if st.button("정보 입력 단계로 이동 ➡️"):
         st.session_state.contract_party = "corporation" if "법인" in party_choice else "individual"
         st.session_state.step = 2
+        st.session_state.generated_doc = None
         st.rerun()
-
+        
 # ---------------------------------------------------------
 # [STEP 2] 정보 입력 페이지
 # ---------------------------------------------------------

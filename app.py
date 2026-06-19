@@ -81,39 +81,41 @@ if st.session_state.step == 1:
                 if "변경" in nature_choice:
                     st.session_state.is_amend = True
                     st.session_state.is_annual = False
-                    st.success("✅ **[변경계약서]** 양식이 최종 확정되었습니다. 아래 이동 버튼을 눌러주세요.")
+                    st.success("✅ **[변경계약서]** 양식이 최종 확정되었습니다.")
                     
                 elif "신규" in nature_choice:
                     st.session_state.is_amend = False
                     # [3번 질문]
                     is_annual_target = st.radio(
                         "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
-                        ["🔽 선택해 주세요", "예 (기존 체결완료)", "아니오 (미체결)"],
+                        ["🔽 선택해 주세요", "예 (기존 체결완료 -> 개별계약 진행)", "아니오 (미체결)"],
                         index=0
                     )
                     
                     # 3번이 선택되었을 때만 다음 진입
                     if is_annual_target != "🔽 선택해 주세요":
                         st.divider()
-                        
-                        if is_annual_target == "예 (기존 체결완료)":
-                            st.session_state.is_annual = False
-                            st.info("✅ **[개별계약서]** 양식이 최종 확정되었습니다. 아래 이동 버튼을 눌러주세요.")
+                        if "예" in is_annual_target:
+                            # 1. 연간계약이 이미 체결된 경우 -> template_corp_single
+                            st.session_state.contract_type = "corp_single"
+                            st.info("✅ **[개별계약서 (기존 연간계약 체결 완료)]** 양식이 최종 확정되었습니다.")
                         else:
-                            # [4번 질문] (4번은 미체결 시 바로 고르는 구조이므로 초기 대기 없음)
+                            # 4번 질문 분기
                             st.warning("⚠️ 기본계약 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
                             sub_choice = st.radio(
                                 "4. 어떤 계약을 진행하시겠습니까?", 
                                 ["기본계약_연간계약 체결", "표준계약_개별계약 체결"]
                             )
-                            st.session_state.is_annual = ("연간계약" in sub_choice)
+                            if "연간계약" in sub_choice:
+                                # 2. 기본계약을 새로 체결해야 하는 경우 -> template_corp_annual
+                                st.session_state.contract_type = "corp_annual"
+                            else:
+                                # 3. 표준계약_개별계약 체결을 원하는 경우 -> template_corp
+                                st.session_state.contract_type = "corp"
                             st.success("✅ 양식 선택이 완료되었습니다. 아래 이동 버튼을 눌러주세요.")
-
-        # ─── 개인 분기 ───
         else:
-            st.session_state.is_amend = False
-            st.session_state.is_annual = False
-            st.info("✅ **[개인 외주계약서]** 양식이 적용됩니다. 아래 이동 버튼을 눌러주세요.")
+            st.session_state.contract_type = "individual"
+            st.info("✅ **[개인 외주계약서]** 양식이 적용됩니다.")
 
         # 최종 이동 버튼은 1번이라도 선택되어야 하단에 등장
         st.write("")
@@ -252,11 +254,11 @@ elif st.session_state.step == 2:
             try:
                 # 템플릿 선택 (이전 단계 분기 반영)
                 if st.session_state.is_amend:
-                    t_name = "template_amend.docx"
+                    t_name = "template_corp_amend.docx"
                 elif st.session_state.contract_party == "individual":
                     t_name = "template_individual.docx"
                 else:
-                    t_name = "template_corporation_annual.docx" if st.session_state.is_annual else "template_corp_single.docx"
+                    t_name = "template_corp_annual.docx" if st.session_state.is_annual else "template_corp_single.docx"
 
                 doc = DocxTemplate(t_name)
                 date_fmt = "%Y년 %m월 %d일"

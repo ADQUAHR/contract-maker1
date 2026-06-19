@@ -182,7 +182,7 @@ elif st.session_state.step == 2:
                
         with p_col2:
             balance_val = st.number_input("잔금 금액", min_value=0, value=0)
-            balance_date = st.date_input("잔금 청구기일 (✅ 잔금 청구기일은 납품 예정일과 동일하게 작성합니다.")
+            balance_date = st.date_input("잔금 청구기일 (⚠️ 잔금 청구기일은 납품 예정일과 동일하게 작성합니다.)")
 
         if prepay_val + balance_val !=amount_val:
             st.warning(f"⚠️ 금액 불일치: 현재 합계 {prepay_val + balance_val:,}원 / 총 계약금액 {amount_val:,}원")

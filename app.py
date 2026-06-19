@@ -53,55 +53,54 @@ st.divider()
 if st.session_state.step == 1:
     st.subheader("❓ 계약 유형을 확인합니다.")
     
-    # [1번 질문] 항상 노출
+    # [1번 질문] 
     party_choice = st.radio(
         "1. 계약 대상 주체가 누구인가요?",
-        ["선택하세요", "법인/사업자 (사업자등록 보유)", "개인 (사업자등록 미보유)"],
+        ["🔽 선택해 주세요", "법인/사업자 (사업자등록 보유)", "개인 (사업자등록 미보유)"],
         index=0,
         key="q_party"
     )
 
     # 1번이 선택되었을 때만 이후 단계 진행
-    if party_choice != "선택하세요":
+    if party_choice != "🔽 선택해 주세요":
         
         # ─── 법인/사업자 분기 ───
         if "법인" in party_choice:
             st.divider()
-            # [2번 질문] 1번에서 법인 선택 시 노출
+            # [2번 질문] 
             nature_choice = st.radio(
                 "2. 계약의 성격이 무엇입니까?",
-                ["선택하세요", "신규계약 (신규 프로젝트)", "변경계약 (기존 계약의 조건 변경)"],
+                ["🔽 선택해 주세요", "신규계약 (신규 프로젝트)", "변경계약 (기존 계약의 조건 변경)"],
                 index=0
             )
             
             # 2번이 선택되었을 때만 다음 진입
-            if nature_choice != "선택하세요":
+            if nature_choice != "🔽 선택해 주세요":
                 st.divider()
                 
                 if "변경" in nature_choice:
-                    # 변경계약은 3번 질문 없이 바로 완료 처리
                     st.session_state.is_amend = True
                     st.session_state.is_annual = False
                     st.success("✅ **[변경계약서]** 양식이 최종 확정되었습니다. 아래 이동 버튼을 눌러주세요.")
                     
                 elif "신규" in nature_choice:
                     st.session_state.is_amend = False
-                    # [3번 질문] 2번에서 신규계약 선택 시 노출
+                    # [3번 질문]
                     is_annual_target = st.radio(
                         "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
-                        ["선택하세요", "예 (기존 체결완료)", "아니오 (미체결)"],
+                        ["🔽 선택해 주세요", "예 (기존 체결완료)", "아니오 (미체결)"],
                         index=0
                     )
                     
                     # 3번이 선택되었을 때만 다음 진입
-                    if is_annual_target != "선택하세요":
+                    if is_annual_target != "🔽 선택해 주세요":
                         st.divider()
                         
                         if is_annual_target == "예 (기존 체결완료)":
                             st.session_state.is_annual = False
                             st.info("✅ **[개별계약서]** 양식이 최종 확정되었습니다. 아래 이동 버튼을 눌러주세요.")
                         else:
-                            # [4번 질문] 3번에서 미체결(아니오) 선택 시 노출
+                            # [4번 질문] (4번은 미체결 시 바로 고르는 구조이므로 초기 대기 없음)
                             st.warning("⚠️ 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요.")
                             sub_choice = st.radio(
                                 "4. 어떤 계약을 진행하시겠습니까?", 

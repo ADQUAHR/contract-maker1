@@ -172,7 +172,15 @@ elif st.session_state.step == 2:
     if st.session_state.contract_party == "corporation":
         st.subheader("💵 대금 지급 세부 일정")
         st.caption("선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 0을 입력해주세요. 선금+잔금의 합은 총 계약금액과 일치해야 합니다.")
-        p_col1, p_col2 = st.columns(2)
+
+        # 실시간 화면 표시용 비율 계산 함수
+        p_rate_disp = f"({(prepay_val/amount_val)*100:.1f}%)" if amount_val > 0 else "(0%)"
+        b_rate_disp = f"({(balance_val/amount_val)*100:.1f}%)" if amount_val > 0 else "(0%)"
+        # .0%로 떨어지면 깔끔하게 정수로 보정
+        p_rate_disp = p_rate_disp.replace(".0%)", "%)")
+        b_rate_disp = b_rate_disp.replace(".0%)", "%)")
+               
+        p_col1, p_col2, p_col3, p_col4 = st.columns([3, 1.5, 3, 1.5])
         with p_col1:
             prepay_val = st.number_input("선금 금액", min_value=0, value=0)
             if prepay_val > 0:
@@ -181,8 +189,17 @@ elif st.session_state.step == 2:
                 prepay_date = None
                
         with p_col2:
-            balance_val = st.number_input("잔금 금액", min_value=0, value=0)
-            balance_date = st.date_input("잔금 청구기일 (⚠️ 잔금 청구기일은 납품 예정일과 동일하게 작성합니다.)")
+            # 선금 금액 옆에 실시간 비율 표시 (읽기 전용)
+            st.text_input("선금 비율", value=p_rate_disp, disabled=True, key="disp_p_rate")
+               
+        with p_col3:
+            # 선금 입력 시 잔금이 자동 계산되도록 기존 편리한 기능 유지
+            balance_val = st.number_input("잔금 금액", min_value=0, value=(amount_val - prepay_val))
+            balance_date = st.date_input("잔금 청구기일 (⚠️ 납품 예정일과 동일하게 작성)")
+            
+        with p_col4:
+            # 잔금 금액 옆에 실시간 비율 표시 (읽기 전용)
+            st.text_input("잔금 비율", value=b_rate_disp, disabled=True, key="disp_b_rate")
 
         if prepay_val + balance_val !=amount_val:
             st.warning(f"⚠️ 금액 불일치: 현재 합계 {prepay_val + balance_val:,}원 / 총 계약금액 {amount_val:,}원")

@@ -249,7 +249,7 @@ elif st.session_state.step == 2:
                 context = {
                     "project_name": project_name, "project_code": project_code, "contract_title": contract_title,
                     "amount_val": f"{amount_val:,}", "amount_kr": amount_kr,
-                    "contract_period": contract_start.strftime(date_fmt),
+                    "contract_start": contract_start.strftime(date_fmt),
                     "delivery_date": delivery_date_val.strftime(date_fmt),
                     "partner_name": partner_name, "partner_address": partner_address,
                     "bank": bank, "bank_account": bank_account, "account_holder": account_holder
@@ -259,23 +259,11 @@ elif st.session_state.step == 2:
                     context["partner_birth"] = partner_info
                 else:
                     context["partner_ceo"] = partner_info
-                    
-                    # ─── [신규 추가] 선금/잔금 청구율 자동 계산 및 포맷팅 ───
-                    if amount_val > 0:
-                        p_rate_calc = (prepay_val / amount_val) * 100
-                        b_rate_calc = (balance_val / amount_val) * 100
-                        prepay_rate = f"{p_rate_calc:.1f}%".replace(".0%", "%")
-                        balance_rate = f"{b_rate_calc:.1f}%".replace(".0%", "%")
-                    else:
-                        prepay_rate, balance_rate = "0%", "0%"
-                    
-                    # 수급사업자(법인) 세부 대금 정보 매핑
+
                     context["prepay_amount"] = f"{prepay_val:,}" if prepay_val > 0 else "0"
-                    context["prepay_rate"] = prepay_rate    # 워드 템플릿 내 {{prepay_rate}} 대응
                     context["prepay_date"] = prepay_date.strftime(date_fmt) if prepay_date else "-"
                     
                     context["balance_amount"] = f"{balance_val:,}"
-                    context["balance_rate"] = balance_rate  # 워드 템플릿 내 {{balance_rate}} 대응
                     context["balance_date"] = balance_date.strftime(date_fmt) if balance_date else "-"
 
                 doc.render(context)

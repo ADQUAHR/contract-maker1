@@ -92,6 +92,11 @@ if st.session_state.step == 1:
                         index=0
                     )
                     
+                    st.link_button(
+                        "🔍 구글에서 연간계약 체결 리스트 확인하기", 
+                        "https://docs.google.com/spreadsheets/d/1ZKkxw6tqTa5d8BHi0ASYwMjW8WC3kawq1SNT6V7VRTk/edit?gid=0#gid=0" 
+                    )
+                    
                     # 3번이 선택되었을 때만 다음 진입
                     if is_annual_target != "🔽 선택해 주세요":
                         st.divider()

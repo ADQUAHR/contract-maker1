@@ -276,8 +276,8 @@ elif st.session_state.step == 2:
     for row in summary_data:
         table_html += f"""
         <tr style='border-bottom: 1px solid #e2e8f0;'>
-            <td style='width: 20%; padding: 10px; font-weight: bold; background-color: #f8fafc; color: #334155;'>{row['항목']}</td>
-            <td style='width: 80%; padding: 10px; color: #1e293b;'>{row['내용']}</td>
+            <td style='width: 20%; padding: 10px; font-weight: bold; background-color: #f8fafc; color: #334155; white-space: nowrap;'>{row['항목']}</td>
+            <td style='width: 80%; padding: 10px; color: #1e293b; white-space: nowrap;'>{row['내용']}</td>
         </tr>
         """
     table_html += "</table>"

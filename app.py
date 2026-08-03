@@ -183,7 +183,7 @@ elif st.session_state.step == 2:
 
         p_col1, p_col2, p_col3, p_col4 = st.columns([3, 1.5, 3, 1.5])
         
-        # 1. 선금 금액 & 선금 비율 입력
+        # 1. 선금 금액 & 선금 청구기일
         with p_col1:
             prepay_val = st.number_input("선금 금액", min_value=0, value=0)
             if prepay_val > 0:
@@ -191,26 +191,28 @@ elif st.session_state.step == 2:
             else:
                 prepay_date = None
 
+        # 2. 선금 비율 입력
         with p_col2:
             raw_p_rate = st.number_input("선금 비율 (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.1, format="%.1f", key="input_p_rate")
             prepay_rate = f"{raw_p_rate:.1f}%".replace(".0%", "%")
 
-        # 2. 선금 비율 입력값에 기반한 잔금 비율 실시간 연산 (100% - 선금비율)
-        raw_b_rate = max(0.0, 100.0 - raw_p_rate)
-        balance_rate = f"{raw_b_rate:.1f}%".replace(".0%", "%")
+        # 3. 잔금 비율 계산 (선금 비율이 0일 때는 100% 대신 0%로 표시)
+        if raw_p_rate > 0:
+            raw_b_rate = max(0.0, 100.0 - raw_p_rate)
+            balance_rate = f"{raw_b_rate:.1f}%".replace(".0%", "%")
+        else:
+            balance_rate = "0%"
 
-        # 3. 잔금 금액 & 잔금 비율 계산값 배치
+        # 4. 잔금 금액 & 잔금 비율(자동계산) 표시
         with p_col3:
-            # 총 금액에서 선금을 뺀 잔액 계산
             calc_balance_default = max(0, amount_val - prepay_val)
             balance_val = st.number_input("잔금 금액", min_value=0, value=calc_balance_default)
             balance_date = st.date_input("잔금 청구기일 (⚠️ 납품 예정일과 동일하게 작성합니다.)")
 
         with p_col4:
-            # [핵심 수정] 잔금 비율 입력창의 value를 방금 계산한 balance_rate로 정확히 고정
             st.text_input("잔금 비율 (자동계산)", value=balance_rate, disabled=True, key="disp_b_rate")
             
-        # 4. 요약 및 경고 문구 확인
+        # 검증 문구
         if prepay_val + balance_val != amount_val:
             st.warning(f"⚠️ 금액 불일치: 현재 합계 {prepay_val + balance_val:,}원 / 총 계약금액 {amount_val:,}원")
         if delivery_date_val != balance_date:

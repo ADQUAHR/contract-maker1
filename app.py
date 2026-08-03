@@ -246,8 +246,8 @@ elif st.session_state.step == 2:
             help="대금 지급 오류 방지를 위해 반드시 계약자 명의와 일치하는지 확인해주세요."
         )
 
-# --- [D. 요약 테이블] ---
-st.divider()
+    # --- [D. 요약 테이블] ---
+    st.divider()
     st.subheader("📋 입력 정보 요약 확인")
 
     # 연간계약일 경우 요약 표 금액 문구 처리

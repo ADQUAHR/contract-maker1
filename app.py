@@ -284,8 +284,6 @@ st.divider()
     
     st.markdown(table_html, unsafe_allow_html=True)
 
-    st.table(pd.DataFrame(summary_data))
-
     # ─── [핵심] submitted 변수를 if submitted: 구문 바로 위에 확실히 선언 ───
     submitted = st.button("📄 위 내용으로 계약서 생성하기", type="primary", use_container_width=True)
 

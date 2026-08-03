@@ -153,7 +153,9 @@ elif st.session_state.step == 2:
     col1, col2 = st.columns(2)
     with col1:
         project_name = st.text_input("프로젝트명")
-        project_code = st.text_input("프로젝트코드")
+        project_code = st.text_input("프로젝트코드 (숫자 10자리)")
+        if project_code and (not project_code.isdigit() or len(project_code) != 10):
+            st.warning("⚠️ 프로젝트코드는 숫자 10자리로 정확하게 입력해주세요.")
         contract_title = st.text_input("계약건명")
     with col2:
         contract_start = st.date_input("계약 시작일")
@@ -246,6 +248,8 @@ elif st.session_state.step == 2:
     if submitted:
         if not project_name or not partner_name or amount_val == 0:
             st.error("❌ 필수 정보(프로젝트명, 상대방, 계약금액)를 모두 입력해주세요.")
+        elif not project_code.isdigit() or len(project_code) != 10:
+            st.error("❌ 프로젝트코드는 숫자 10자리여야 계약서를 생성할 수 있습니다.")
         elif st.session_state.contract_party == "corporation" and (prepay_val + balance_val != amount_val):
             st.error(f"❌ 금액 불일치: 선금+잔금({prepay_val + balance_val:,})이 총 계약금액({amount_val:,})과 다릅니다.")
         else:

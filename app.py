@@ -6,32 +6,33 @@ import pandas as pd
 
 # [함수] 숫자를 한글 금액으로 변환
 def format_ko_money(num):
-    if not num or num == 0: return "영원"
-    units = ["", "십", "백", "천"]
-    big_units = ["", "만", "억", "조"]
-    nums = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"]
-    res = ""
-    num_str = str(int(num))[::-1]
-    for i in range(0, len(num_str), 4):
-        chunk = num_str[i:i+4]
-        chunk_res = ""
-        for j, n in enumerate(chunk):
-            if n != '0':
-                chunk_res = nums[int(n)] + units[j] + chunk_res
-        if chunk_res:
-            res = chunk_res + big_units[i//4] + res
-    return f"{res}원"
+    try:
+        if not num or num == 0: return "영원"
+        units = ["", "십", "백", "천"]
+        big_units = ["", "만", "억", "조"]
+        nums = ["", "일", "이", "삼", "사", "오", "육", "칠", "팔", "구"]
+        res = ""
+        num_str = str(int(num))[::-1]
+        for i in range(0, len(num_str), 4):
+            chunk = num_str[i:i+4]
+            chunk_res = ""
+            for j, n in enumerate(chunk):
+                if n != '0':
+                    chunk_res = nums[int(n)] + units[j] + chunk_res
+            if chunk_res:
+                res = chunk_res + big_units[i//4] + res
+        return f"{res}원"
+    except:
+        return "영원"
 
 # 1. 화면 설정
-st.set_page_config(page_title="외주계약서 자동 생성기", layout="wide")
+st.set_page_config(page_title="애드쿠아 외주계약 시스템 v1.1", layout="wide")
 
 # 2. 세션 상태 초기화
-if 'step' not in st.session_state:
-    st.session_state.step = 1
-if 'contract_party' not in st.session_state:
-    st.session_state.contract_party = "corporation"
-if 'is_annual' not in st.session_state:
-    st.session_state.is_annual = False
+if 'step' not in st.session_state: st.session_state.step = 1
+if 'contract_party' not in st.session_state: st.session_state.contract_party = "corporation"
+if 'contract_type' not in st.session_state: st.session_state.contract_type = ""
+if 'generated_doc' not in st.session_state: st.session_state.generated_doc = None
 
 st.title("🛡️ 애드쿠아인터렉티브 외주계약서 생성 시스템")
 
@@ -79,12 +80,10 @@ if st.session_state.step == 1:
                 st.divider()
                 
                 if "변경" in nature_choice:
-                    st.session_state.is_amend = True
-                    st.session_state.is_annual = False
+                    st.session_state.contract_type = "corp_amend"
                     st.success("✅ **[변경계약서]** 양식이 최종 확정되었습니다.")
                     
                 elif "신규" in nature_choice:
-                    st.session_state.is_amend = False
                     # [3번 질문]
                     is_annual_target = st.radio(
                         "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?", 
@@ -101,7 +100,6 @@ if st.session_state.step == 1:
                     if is_annual_target != "🔽 선택해 주세요":
                         st.divider()
                         if "예" in is_annual_target:
-                            # 1. 연간계약이 이미 체결된 경우 -> template_corp_single
                             st.session_state.contract_type = "corp_single"
                             st.info("✅ **[개별계약서 (기존 연간계약 체결 완료)]** 양식이 최종 확정되었습니다.")
                         else:
@@ -112,10 +110,8 @@ if st.session_state.step == 1:
                                 ["기본계약_연간계약 체결", "표준계약_개별계약 체결"]
                             )
                             if "연간계약" in sub_choice:
-                                # 2. 기본계약을 새로 체결해야 하는 경우 -> template_corp_annual
                                 st.session_state.contract_type = "corp_annual"
                             else:
-                                # 3. 표준계약_개별계약 체결을 원하는 경우 -> template_corp
                                 st.session_state.contract_type = "corp"
                             st.success("✅ 양식 선택이 완료되었습니다. 아래 이동 버튼을 눌러주세요.")
         else:
@@ -129,6 +125,7 @@ if st.session_state.step == 1:
             st.session_state.step = 2
             st.session_state.generated_doc = None
             st.rerun()
+
 # ---------------------------------------------------------
 # [STEP 2] 정보 입력 페이지
 # ---------------------------------------------------------
@@ -173,6 +170,8 @@ elif st.session_state.step == 2:
     # --- [B. 상세 정보 입력 폼] ---
     prepay_val = 0
     balance_val = 0
+    prepay_rate = "0%"
+    balance_rate = "0%"
     prepay_date = datetime.now()
     balance_date = datetime.now()
 
@@ -180,13 +179,6 @@ elif st.session_state.step == 2:
         st.subheader("💵 대금 지급 세부 일정")
         st.caption("선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 0을 입력해주세요. 선금+잔금의 합은 총 계약금액과 일치해야 합니다.")
 
-        # 실시간 화면 표시용 비율 계산 함수
-        p_rate_disp = f"({(prepay_val/amount_val)*100:.1f}%)" if amount_val > 0 else "(0%)"
-        b_rate_disp = f"({(balance_val/amount_val)*100:.1f}%)" if amount_val > 0 else "(0%)"
-        # .0%로 떨어지면 깔끔하게 정수로 보정
-        p_rate_disp = p_rate_disp.replace(".0%)", "%)")
-        b_rate_disp = b_rate_disp.replace(".0%)", "%)")
-               
         p_col1, p_col2, p_col3, p_col4 = st.columns([3, 1.5, 3, 1.5])
         with p_col1:
             prepay_val = st.number_input("선금 금액", min_value=0, value=0)
@@ -194,19 +186,18 @@ elif st.session_state.step == 2:
                 prepay_date = st.date_input("선금 청구기일 ")
             else:
                 prepay_date = None
+                
+        with p_col2:
+            prepay_rate = st.text_input("선금 비율", value="0%", key="input_p_rate")
                
         with p_col3:
-            # 총 계약금액에서 선금을 뺀 금액이 기본 잔금으로 자동 세팅되도록 설정
             balance_val = st.number_input("잔금 금액", min_value=0, value=(amount_val - prepay_val))
             balance_date = st.date_input("잔금 청구기일 (⚠️ 납품 예정일과 동일하게 작성합니다.)")
 
-        with p_col2:
-            prepay_rate = st.text_input("선금 비율", value="0%", key="input_p_rate")
-            
         with p_col4:
             balance_rate = st.text_input("잔금 비율", value="0%", key="input_b_rate")
             
-        if prepay_val + balance_val !=amount_val:
+        if prepay_val + balance_val != amount_val:
             st.warning(f"⚠️ 금액 불일치: 현재 합계 {prepay_val + balance_val:,}원 / 총 계약금액 {amount_val:,}원")
         if delivery_date_val != balance_date:
             st.warning(f"📅 날짜 확인 필요: 납품 예정일({delivery_date_val.strftime('%m/%d')})과 잔금 청구기일({balance_date.strftime('%m/%d')})이 일치하지 않습니다.")   
@@ -222,16 +213,18 @@ elif st.session_state.step == 2:
     with c2:
         bank = st.text_input("은행명")
         bank_account = st.text_input("계좌번호")
-        account_holder = st.text_input("예금주")
-        help=f"대금 지급 오류 방지를 위해 반드시 계약자 명의와 일치하는지 확인해주세요."
-
+        # [수정 완료] help 인자를 text_input 내부 파라미터로 올바르게 포함
+        account_holder = st.text_input(
+            "예금주", 
+            help="대금 지급 오류 방지를 위해 반드시 계약자 명의와 일치하는지 확인해주세요."
+        )
 
     # --- [D. 요약 테이블] ---
     st.divider()
     st.subheader("📋 입력 정보 요약 확인")
 
     if prepay_val > 0:
-        payment_detail = f"\n- 선금: {prepay_val:,}원\n- 잔금: {balance_val:,}원" if prepay_val > 0 else ""
+        payment_detail = f"\n- 선금: {prepay_val:,}원 ({prepay_rate})\n- 잔금: {balance_val:,}원 ({balance_rate})"
     else:
         payment_detail = ""
     
@@ -257,60 +250,88 @@ elif st.session_state.step == 2:
             st.error(f"❌ 금액 불일치: 선금+잔금({prepay_val + balance_val:,})이 총 계약금액({amount_val:,})과 다릅니다.")
         else:
             try:
-                # 템플릿 선택 (이전 단계 분기 반영)
-                if st.session_state.is_amend:
-                    t_name = "template_corp_amend.docx"
-                elif st.session_state.contract_party == "individual":
+                # [수정 완료] STEP 1에서 분기된 contract_type 변수에 따라 정확한 템플릿 매핑
+                if st.session_state.contract_party == "individual":
                     t_name = "template_individual.docx"
                 else:
-                    t_name = "template_corp_annual.docx" if st.session_state.is_annual else "template_corp_single.docx"
+                    if st.session_state.contract_type == "corp_amend":
+                        t_name = "template_corp_amend.docx"
+                    elif st.session_state.contract_type == "corp_single":
+                        t_name = "template_corp_single.docx"
+                    elif st.session_state.contract_type == "corp_annual":
+                        t_name = "template_corp_annual.docx"
+                    elif st.session_state.contract_type == "corp":
+                        t_name = "template_corp.docx"
+                    else:
+                        t_name = "template_corp_single.docx"
 
                 doc = DocxTemplate(t_name)
                 date_fmt = "%Y년 %m월 %d일"
                 
+                # 워드 템플릿에 주입할 데이터 딕셔너리
                 context = {
                     "project_name": project_name, "project_code": project_code, "contract_title": contract_title,
                     "amount_val": f"{amount_val:,}", "amount_kr": amount_kr,
                     "contract_start": contract_start.strftime(date_fmt),
                     "delivery_date": delivery_date_val.strftime(date_fmt),
                     "partner_name": partner_name, "partner_address": partner_address,
-                    "bank": bank, "bank_account": bank_account, "account_holder": account_holder
+                    "bank": bank, "bank_account": bank_account, "account_holder": account_holder,
+                    
+                    # 공백 포함 양식에도 호환되도록 기본 치환 데이터 제공
+                    " project_name ": project_name, " project_code ": project_code, " contract_title ": contract_title,
+                    " amount_val ": f"{amount_val:,}", " amount_kr ": amount_kr,
+                    " contract_start ": contract_start.strftime(date_fmt),
+                    " delivery_date ": delivery_date_val.strftime(date_fmt),
+                    " partner_name ": partner_name, " partner_address ": partner_address,
+                    " bank ": bank, " bank_account ": bank_account, " account_holder ": account_holder
                 }
 
                 if st.session_state.contract_party == "individual":
                     context["partner_birth"] = partner_info
+                    context[" partner_birth "] = partner_info
                 else:
                     context["partner_ceo"] = partner_info
+                    context[" partner_ceo "] = partner_info
 
+                    # [수정 완료] 수기 입력받은 선금/잔금 비율을 워드 양식에 전달
                     context["prepay_amount"] = f"{prepay_val:,}" if prepay_val > 0 else "0"
+                    context["prepay_rate"] = prepay_rate
                     context["prepay_date"] = prepay_date.strftime(date_fmt) if prepay_date else "-"
                     
                     context["balance_amount"] = f"{balance_val:,}"
+                    context["balance_rate"] = balance_rate
                     context["balance_date"] = balance_date.strftime(date_fmt) if balance_date else "-"
+                    
+                    # 양쪽 공백이 포함된 워드 양식 태그에도 완벽 호환
+                    context[" prepay_amount "] = f"{prepay_val:,}" if prepay_val > 0 else "0"
+                    context[" prepay_rate "] = prepay_rate
+                    context[" prepay_date "] = prepay_date.strftime(date_fmt) if prepay_date else "-"
+                    context[" balance_amount "] = f"{balance_val:,}"
+                    context[" balance_rate "] = balance_rate
+                    context[" balance_date "] = balance_date.strftime(date_fmt) if balance_date else "-"
 
                 doc.render(context)
                 bio = io.BytesIO()
                 doc.save(bio)
                 
-                # [개선] 생성된 파일을 세션 상태에 안정적으로 보관
                 file_string_date = contract_start.strftime("%Y%m%d")
                 st.session_state.generated_doc = {
                     "name": f"{project_name}_{partner_name}_{file_string_date}.docx",
                     "data": bio.getvalue()
                 }
                 st.success("🎉 계약서 생성이 완료되었습니다! 계약서 초안을 다운받은 후 [별첨1]을 추가로 작성해서 마무리해주세요.")
+                st.rerun()
                 
             except Exception as e:
                 st.error(f"파일 생성 중 오류 발생: {e}")
 
-    # [개선] 다운로드 중 화면 초기화 현상을 방지하기 위해 생성 버튼 외부에 독립 배치
-        if st.session_state.generated_doc:
-            st.write("")
-            st.download_button(
-                label="📥 계약서초안 다운로드", 
-                data=st.session_state.generated_doc["data"], 
-                file_name=st.session_state.generated_doc["name"],
-                mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-                use_container_width=True
-            )
-   
+    # [수정 완료] 다운로드 버튼 독립 배치
+    if st.session_state.generated_doc:
+        st.write("")
+        st.download_button(
+            label="📥 계약서초안 다운로드", 
+            data=st.session_state.generated_doc["data"], 
+            file_name=st.session_state.generated_doc["name"],
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True
+        )

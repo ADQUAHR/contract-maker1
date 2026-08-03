@@ -71,7 +71,7 @@ if st.session_state.step == 1:
             # [2번 질문] 
             nature_choice = st.radio(
                 "2. 계약의 성격이 무엇입니까?",
-                ["🔽 선택해 주세요", "신규계약 (신규 프로젝트)", "변경계약 (기존 계약의 조건 변경)"],
+                ["🔽 선택해 주세요", "신규계약", "변경계약 (기존 계약의 조건 변경)"],
                 index=0
             )
             
@@ -180,6 +180,15 @@ elif st.session_state.step == 2:
     if st.session_state.contract_party == "corporation":
         st.subheader("💵 대금 지급 세부 일정")
         st.caption("선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 0을 입력해주세요. 선금+잔금의 합은 총 계약금액과 일치해야 합니다.")
+
+        if amount_val > 0:
+            calc_p_rate = (prepay_val / amount_val) * 100
+            calc_b_rate = ((amount_val - prepay_val) / amount_val) * 100
+            str_p_rate = f"{calc_p_rate:.1f}%".replace(".0%", "%")
+            str_b_rate = f"{calc_b_rate:.1f}%".replace(".0%", "%")
+        else:
+            str_p_rate = "0%"
+            str_b_rate = "0%"            
 
         p_col1, p_col2, p_col3, p_col4 = st.columns([3, 1.5, 3, 1.5])
         with p_col1:

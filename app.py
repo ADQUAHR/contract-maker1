@@ -141,14 +141,22 @@ elif st.session_state.step == 2:
 
     # --- [A. 실시간 반영 영역] ---
     st.subheader("💰 계약 금액 및 프로젝트 정보")
-    amt_col1, amt_col2, amt_col3 = st.columns(3)
-    with amt_col1:
-        amount_val = st.number_input("총 계약금액 (숫자)", min_value=0, step=1000)
-    with amt_col2:
-        st.text_input("입력된 금액 (콤마)", value=f"{amount_val:,}원", disabled=True)
-    with amt_col3:
-        amount_kr = format_ko_money(amount_val)
-        st.text_input("총 계약금액 (한글)", value=amount_kr, disabled=True)
+
+    if st.session_state.contract_type == "corp_annual":
+        annual_amount_msg = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
+        st.text_input("총 계약금액", value=annual_amount_msg, disabled=True)
+        amount_val = 0
+        amount_kr = annual_amount_msg
+
+    else:
+        amt_col1, amt_col2, amt_col3 = st.columns(3)
+        with amt_col1:
+            amount_val = st.number_input("총 계약금액 (숫자)", min_value=0, step=1000)
+        with amt_col2:
+            st.text_input("입력된 금액 (콤마)", value=f"{amount_val:,}원", disabled=True)
+        with amt_col3:
+            amount_kr = format_ko_money(amount_val)
+            st.text_input("총 계약금액 (한글)", value=amount_kr, disabled=True)
 
     col1, col2 = st.columns(2)
     with col1:
@@ -262,16 +270,22 @@ elif st.session_state.step == 2:
     submitted = st.button("📄 위 내용으로 계약서 생성하기", type="primary", use_container_width=True)
 
     # --- [C. 생성 및 검증 로직] ---
-    if submitted:
-        if not project_name or not partner_name or amount_val == 0:
+if submitted:
+        # 연간계약이 아닐 때만 amount_val == 0 검증 적용
+        is_amount_invalid = (st.session_state.contract_type != "corp_annual") and (amount_val == 0)
+        
+        if not project_name or not partner_name or is_amount_invalid:
             st.error("❌ 필수 정보(프로젝트명, 상대방, 계약금액)를 모두 입력해주세요.")
+            
         elif not project_code.isdigit() or len(project_code) != 10:
             st.error("❌ 프로젝트코드는 숫자 10자리여야 계약서를 생성할 수 있습니다.")
-        elif st.session_state.contract_party == "corporation" and (prepay_val + balance_val != amount_val):
+            
+        elif st.session_state.contract_party == "corporation" and st.session_state.contract_type != "corp_annual" and (prepay_val + balance_val != amount_val):
             st.error(f"❌ 금액 불일치: 선금+잔금({prepay_val + balance_val:,})이 총 계약금액({amount_val:,})과 다릅니다.")
+            
         else:
             try:
-                # [수정 완료] STEP 1에서 분기된 contract_type 변수에 따라 정확한 템플릿 매핑
+                # 템플릿 분기
                 if st.session_state.contract_party == "individual":
                     t_name = "template_individual.docx"
                 else:
@@ -289,22 +303,43 @@ elif st.session_state.step == 2:
                 doc = DocxTemplate(t_name)
                 date_fmt = "%Y년 %m월 %d일"
                 
-                # 워드 템플릿에 주입할 데이터 딕셔너리
+                # 연간계약 전용 값 처리
+                if st.session_state.contract_type == "corp_annual":
+                    delivery_str = "개별계약에 따름"
+                    amount_display = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
+                else:
+                    delivery_str = delivery_date_val.strftime(date_fmt) if delivery_date_val else "개별계약에 따름"
+                    amount_display = f"{amount_val:,}"
+
                 context = {
                     "project_name": project_name, "project_code": project_code, "contract_title": contract_title,
-                    "amount_val": f"{amount_val:,}", "amount_kr": amount_kr,
+                    "amount_val": amount_display, 
+                    "amount_kr": amount_kr,
                     "contract_start": contract_start.strftime(date_fmt),
-                    "delivery_date": delivery_date_val.strftime(date_fmt),
+                    "delivery_date": delivery_str,
                     "partner_name": partner_name, "partner_address": partner_address,
                     "bank": bank, "bank_account": bank_account, "account_holder": account_holder,
-                    
-                    # 공백 포함 양식에도 호환되도록 기본 치환 데이터 제공
+                    "prepay_amount": f"{prepay_val:,}" if prepay_val > 0 else "0",
+                    "prepay_rate": prepay_rate,
+                    "prepay_date": prepay_date.strftime(date_fmt) if prepay_date else "-",
+                    "balance_amount": f"{balance_val:,}",
+                    "balance_rate": balance_rate,
+                    "balance_date": balance_date.strftime(date_fmt) if balance_date else "-",
+
+                    # 양쪽 공백 포함 태그 호환용
                     " project_name ": project_name, " project_code ": project_code, " contract_title ": contract_title,
-                    " amount_val ": f"{amount_val:,}", " amount_kr ": amount_kr,
+                    " amount_val ": amount_display, 
+                    " amount_kr ": amount_kr,
                     " contract_start ": contract_start.strftime(date_fmt),
-                    " delivery_date ": delivery_date_val.strftime(date_fmt),
+                    " delivery_date ": delivery_str,
                     " partner_name ": partner_name, " partner_address ": partner_address,
-                    " bank ": bank, " bank_account ": bank_account, " account_holder ": account_holder
+                    " bank ": bank, " bank_account ": bank_account, " account_holder ": account_holder,
+                    " prepay_amount ": f"{prepay_val:,}" if prepay_val > 0 else "0",
+                    " prepay_rate ": prepay_rate,
+                    " prepay_date ": prepay_date.strftime(date_fmt) if prepay_date else "-",
+                    " balance_amount ": f"{balance_val:,}",
+                    " balance_rate ": balance_rate,
+                    " balance_date ": balance_date.strftime(date_fmt) if balance_date else "-"
                 }
 
                 if st.session_state.contract_party == "individual":
@@ -313,23 +348,6 @@ elif st.session_state.step == 2:
                 else:
                     context["partner_ceo"] = partner_info
                     context[" partner_ceo "] = partner_info
-
-                    # [수정 완료] 수기 입력받은 선금/잔금 비율을 워드 양식에 전달
-                    context["prepay_amount"] = f"{prepay_val:,}" if prepay_val > 0 else "0"
-                    context["prepay_rate"] = prepay_rate
-                    context["prepay_date"] = prepay_date.strftime(date_fmt) if prepay_date else "-"
-                    
-                    context["balance_amount"] = f"{balance_val:,}"
-                    context["balance_rate"] = balance_rate
-                    context["balance_date"] = balance_date.strftime(date_fmt) if balance_date else "-"
-                    
-                    # 양쪽 공백이 포함된 워드 양식 태그에도 완벽 호환
-                    context[" prepay_amount "] = f"{prepay_val:,}" if prepay_val > 0 else "0"
-                    context[" prepay_rate "] = prepay_rate
-                    context[" prepay_date "] = prepay_date.strftime(date_fmt) if prepay_date else "-"
-                    context[" balance_amount "] = f"{balance_val:,}"
-                    context[" balance_rate "] = balance_rate
-                    context[" balance_date "] = balance_date.strftime(date_fmt) if balance_date else "-"
 
                 doc.render(context)
                 bio = io.BytesIO()
@@ -345,7 +363,7 @@ elif st.session_state.step == 2:
                 
             except Exception as e:
                 st.error(f"파일 생성 중 오류 발생: {e}")
-
+                
     # [수정 완료] 다운로드 버튼 독립 배치
     if st.session_state.generated_doc:
         st.write("")

@@ -247,7 +247,7 @@ elif st.session_state.step == 2:
         )
 
 # --- [D. 요약 테이블] ---
-    st.divider()
+st.divider()
     st.subheader("📋 입력 정보 요약 확인")
 
     # 연간계약일 경우 요약 표 금액 문구 처리
@@ -257,7 +257,7 @@ elif st.session_state.step == 2:
     else:
         summary_amount_str = f"{amount_val:,}원 ({amount_kr})"
         if prepay_val > 0:
-            summary_amount_str += f"\n- 선금: {prepay_val:,}원 ({prepay_rate})\n- 잔금: {balance_val:,}원 ({balance_rate})"
+            summary_amount_str += f"<br>- 선금: {prepay_val:,}원 ({prepay_rate})<br>- 잔금: {balance_val:,}원 ({balance_rate})"
         summary_delivery_str = f"{delivery_date_val}"
 
     summary_data = [
@@ -270,6 +270,19 @@ elif st.session_state.step == 2:
         {"항목": "납품예정일자", "내용": summary_delivery_str},
         {"항목": "지급 계좌", "내용": f"{bank} {bank_account} (예금주: {account_holder})"}
     ]
+
+    # ─── [수정] st.table 대신 너비가 넉넉한 커스텀 HTML 테이블 출력 ───
+    table_html = "<table style='width:100%; border-collapse:collapse; margin-bottom:1.5rem;'>"
+    for row in summary_data:
+        table_html += f"""
+        <tr style='border-bottom: 1px solid #e2e8f0;'>
+            <td style='width: 20%; padding: 10px; font-weight: bold; background-color: #f8fafc; color: #334155;'>{row['항목']}</td>
+            <td style='width: 80%; padding: 10px; color: #1e293b;'>{row['내용']}</td>
+        </tr>
+        """
+    table_html += "</table>"
+    
+    st.markdown(table_html, unsafe_allow_html=True)
 
     st.table(pd.DataFrame(summary_data))
 

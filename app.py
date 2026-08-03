@@ -159,7 +159,12 @@ elif st.session_state.step == 2:
         contract_title = st.text_input("계약건명")
     with col2:
         contract_start = st.date_input("계약 시작일")
-        delivery_date_val = st.date_input("납품 예정일")
+
+        if st.session_state.contract_type == "corp_annual":
+            st.text_input("납품 예정일", value="개별계약에 따름", disabled=True)
+            delivery_date_val = None
+        else:
+            delivery_date_val = st.date_input("납품 예정일")
 
     st.divider()
 

@@ -246,31 +246,38 @@ elif st.session_state.step == 2:
             help="대금 지급 오류 방지를 위해 반드시 계약자 명의와 일치하는지 확인해주세요."
         )
 
-    # --- [D. 요약 테이블] ---
+# --- [D. 요약 테이블] ---
     st.divider()
     st.subheader("📋 입력 정보 요약 확인")
 
-    if prepay_val > 0:
-        payment_detail = f"\n- 선금: {prepay_val:,}원 ({prepay_rate})\n- 잔금: {balance_val:,}원 ({balance_rate})"
+    # 연간계약일 경우 요약 표 금액 문구 처리
+    if st.session_state.contract_type == "corp_annual":
+        summary_amount_str = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
+        summary_delivery_str = "개별계약에 따름"
     else:
-        payment_detail = ""
-    
+        summary_amount_str = f"{amount_val:,}원 ({amount_kr})"
+        if prepay_val > 0:
+            summary_amount_str += f"\n- 선금: {prepay_val:,}원 ({prepay_rate})\n- 잔금: {balance_val:,}원 ({balance_rate})"
+        summary_delivery_str = f"{delivery_date_val}"
+
     summary_data = [
         {"항목": "프로젝트명", "내용": project_name},
+        {"항목": "프로젝트코드", "내용": project_code},
         {"항목": "계약건명", "내용": contract_title},
         {"항목": "계약 상대방", "내용": partner_name},
-        {"항목": "총 계약금액", "내용": f"{amount_val:,}원 ({amount_kr}){payment_detail}"},
+        {"항목": "총 계약금액", "내용": summary_amount_str},
         {"항목": "계약 기간", "내용": f"{contract_start} ~ 대금 지급 완료시까지"},
-        {"항목": "납품예정일자", "내용": f"{delivery_date_val}"},
+        {"항목": "납품예정일자", "내용": summary_delivery_str},
         {"항목": "지급 계좌", "내용": f"{bank} {bank_account} (예금주: {account_holder})"}
     ]
 
     st.table(pd.DataFrame(summary_data))
 
+    # ─── [핵심] submitted 변수를 if submitted: 구문 바로 위에 확실히 선언 ───
     submitted = st.button("📄 위 내용으로 계약서 생성하기", type="primary", use_container_width=True)
 
     # --- [C. 생성 및 검증 로직] ---
-if submitted:
+    if submitted:
         # 연간계약이 아닐 때만 amount_val == 0 검증 적용
         is_amount_invalid = (st.session_state.contract_type != "corp_annual") and (amount_val == 0)
         
@@ -285,7 +292,7 @@ if submitted:
             
         else:
             try:
-                # 템플릿 분기
+                # 템플릿 선택
                 if st.session_state.contract_party == "individual":
                     t_name = "template_individual.docx"
                 else:

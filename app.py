@@ -238,9 +238,9 @@ elif st.session_state.step == 2:
 
         col_m1, col_m2 = st.columns(2)
         with col_m1:
-            original_period = st.text_input(
-                "원계약 체결일자/기간", placeholder="예: 2026년 01월 15일"
-            )
+            # 💡 [수정] 원계약 체결일자 달력선택 형태로 변경
+            orig_period_date = st.date_input("원계약 체결일자")
+            original_period_str = orig_period_date.strftime("%Y년 %m월 %d일")
         with col_m2:
             amend_period_date = st.date_input("변경 계약일자")
 
@@ -264,17 +264,15 @@ elif st.session_state.step == 2:
 
         if "1. 계약 금액 변경" in selected_changes:
             st.markdown("#### 💰 [변경 내용 1] 계약 금액 변경")
-            
-            # 💡 [추가] 선금 유무 선택 라디오 버튼
+
             has_prepay = st.radio(
                 "선금(계약금) 유무 선택",
                 ["선금(계약금) 없음 (잔금만 변경)", "선금(계약금) 있음 (선금+잔금 변경)"],
                 index=0,
-                horizontal=True
+                horizontal=True,
             )
             st.write("")
 
-            # A. 선금(계약금)이 없는 경우 -> 잔금만 입력
             if "없음" in has_prepay:
                 mc1, mc2, mc3 = st.columns([1.5, 3, 3])
                 with mc1:
@@ -295,7 +293,6 @@ elif st.session_state.step == 2:
                     new_b_date = st.date_input("변경 잔금 지급기한", key="nbd_only")
                     new_b_date_str = new_b_date.strftime("%Y년 %m월 %d일")
 
-            # B. 선금(계약금)이 있는 경우 -> 선금 + 잔금 입력
             else:
                 mc1, mc2, mc3 = st.columns([1.5, 3, 3])
                 with mc1:
@@ -375,7 +372,7 @@ elif st.session_state.step == 2:
             st.divider()
 
         amend_context_extra = {
-            "original_period": original_period,
+            "original_period": original_period_str,
             "amend_period": amend_period_date.strftime("%Y년 %m월 %d일"),
             "orig_prepay": f"{orig_prepay:,}" if orig_prepay > 0 else "0",
             "new_prepay": f"{new_prepay:,}" if new_prepay > 0 else "0",
@@ -518,7 +515,7 @@ elif st.session_state.step == 2:
             if amend_context_extra.get("new_delivery_ymd") != "-"
             else "원계약 조건 따름"
         )
-        summary_period_str = f"변경 계약일: {amend_context_extra.get('amend_period', '-')}"
+        summary_period_str = f"원계약일: {amend_context_extra.get('original_period', '-')} / 변경계약일: {amend_context_extra.get('amend_period', '-')}"
         summary_bank_str = "원계약 계좌 적용 (입력 생략)"
     else:
         summary_amount_str = f"{amount_val:,}원 ({amount_kr})"

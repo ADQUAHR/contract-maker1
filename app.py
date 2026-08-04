@@ -164,31 +164,44 @@ elif st.session_state.step == 2:
     # --- [A. 프로젝트 정보 및 기본계약 정보] ---
     st.subheader("💰 프로젝트 정보 및 계약 정보")
 
-    col_p1, col_p2 = st.columns(2)
-    with col_p1:
-        project_name = st.text_input("프로젝트명")
-    with col_p2:
-        contract_start = st.date_input("계약 시작일")
+    contract_start = None
+    delivery_date_val = None
 
-    col_c1, col_c2 = st.columns(2)
-    with col_c1:
-        project_code = st.text_input("프로젝트코드 (숫자 10자리)")
-        if project_code and (
-            not project_code.isdigit() or len(project_code) != 10
-        ):
-            st.warning("⚠️ 프로젝트코드는 숫자 10자리로 정확하게 입력해주세요.")
-    with col_c2:
-        if st.session_state.contract_type == "corp_annual":
-            st.text_input(
-                "납품 예정일", value="개별계약에 따름", disabled=True
-            )
-            delivery_date_val = None
-        else:
-            delivery_date_val = st.date_input("납품 예정일")
+    if st.session_state.contract_type == "corp_amend":
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            project_name = st.text_input("프로젝트명")
+        with col_p2:
+            project_code = st.text_input("프로젝트코드 (숫자 10자리)")
+            if project_code and (
+                not project_code.isdigit() or len(project_code) != 10
+            ):
+                st.warning("⚠️ 프로젝트코드는 숫자 10자리로 정확하게 입력해주세요.")
+    else:
+        col_p1, col_p2 = st.columns(2)
+        with col_p1:
+            project_name = st.text_input("프로젝트명")
+        with col_p2:
+            contract_start = st.date_input("계약 시작일")
+
+        col_c1, col_c2 = st.columns(2)
+        with col_c1:
+            project_code = st.text_input("프로젝트코드 (숫자 10자리)")
+            if project_code and (
+                not project_code.isdigit() or len(project_code) != 10
+            ):
+                st.warning("⚠️ 프로젝트코드는 숫자 10자리로 정확하게 입력해주세요.")
+        with col_c2:
+            if st.session_state.contract_type == "corp_annual":
+                st.text_input(
+                    "납품 예정일", value="개별계약에 따름", disabled=True
+                )
+                delivery_date_val = None
+            else:
+                delivery_date_val = st.date_input("납품 예정일")
 
     contract_title = st.text_input("계약건명")
 
-    # 신규/연간계약인 경우에만 일반 총 계약금액 입력란 표시
     amount_val = 0
     amount_kr = ""
     if st.session_state.contract_type != "corp_amend":
@@ -251,51 +264,84 @@ elif st.session_state.step == 2:
 
         if "1. 계약 금액 변경" in selected_changes:
             st.markdown("#### 💰 [변경 내용 1] 계약 금액 변경")
-            mc1, mc2, mc3 = st.columns([1.5, 3, 3])
-            with mc1:
-                st.caption("구분")
-                st.write("**계약금(선금)**")
-                st.write("")
-                st.write("")
-                st.write("**잔금**")
-            with mc2:
-                st.caption("당초 금액 및 지급 기한")
-                orig_prepay = st.number_input(
-                    "당초 선금", min_value=0, value=0, step=10000
-                )
-                orig_p_date = st.date_input("당초 선금 지급기한", key="opd")
-                orig_balance = st.number_input(
-                    "당초 잔금", min_value=0, value=0, step=10000
-                )
-                orig_b_date = st.date_input("당초 잔금 지급기한", key="obd")
-
-                orig_p_date_str = orig_p_date.strftime("%Y년 %m월 %d일")
-                orig_b_date_str = orig_b_date.strftime("%Y년 %m월 %d일")
-
-            with mc3:
-                st.caption("변경 금액 및 지급 기한")
-                new_prepay = st.number_input(
-                    "변경 선금", min_value=0, value=0, step=10000
-                )
-                new_p_date = st.date_input("변경 선금 지급기한", key="npd")
-                new_balance = st.number_input(
-                    "변경 잔금", min_value=0, value=0, step=10000
-                )
-                new_b_date = st.date_input("변경 잔금 지급기한", key="nbd")
-
-                new_p_date_str = new_p_date.strftime("%Y년 %m월 %d일")
-                new_b_date_str = new_b_date.strftime("%Y년 %m월 %d일")
-
+            
+            # 💡 [추가] 선금 유무 선택 라디오 버튼
+            has_prepay = st.radio(
+                "선금(계약금) 유무 선택",
+                ["선금(계약금) 없음 (잔금만 변경)", "선금(계약금) 있음 (선금+잔금 변경)"],
+                index=0,
+                horizontal=True
+            )
             st.write("")
-            pc1, pc2 = st.columns(2)
-            with pc1:
-                paid_prepay_val = st.number_input(
-                    "이미 지급 완료된 선금 금액", min_value=0, value=0
-                )
-                paid_prepay_kr = format_ko_money(paid_prepay_val)
-            with pc2:
-                paid_date = st.date_input("선금 지급 완료일자")
-                paid_date_str = paid_date.strftime("%Y년 %m월 %d일")
+
+            # A. 선금(계약금)이 없는 경우 -> 잔금만 입력
+            if "없음" in has_prepay:
+                mc1, mc2, mc3 = st.columns([1.5, 3, 3])
+                with mc1:
+                    st.caption("구분")
+                    st.write("**잔금 (합계)**")
+                with mc2:
+                    st.caption("당초 금액 및 지급 기한")
+                    orig_balance = st.number_input(
+                        "당초 잔금", min_value=0, value=0, step=10000
+                    )
+                    orig_b_date = st.date_input("당초 잔금 지급기한", key="obd_only")
+                    orig_b_date_str = orig_b_date.strftime("%Y년 %m월 %d일")
+                with mc3:
+                    st.caption("변경 금액 및 지급 기한")
+                    new_balance = st.number_input(
+                        "변경 잔금", min_value=0, value=0, step=10000
+                    )
+                    new_b_date = st.date_input("변경 잔금 지급기한", key="nbd_only")
+                    new_b_date_str = new_b_date.strftime("%Y년 %m월 %d일")
+
+            # B. 선금(계약금)이 있는 경우 -> 선금 + 잔금 입력
+            else:
+                mc1, mc2, mc3 = st.columns([1.5, 3, 3])
+                with mc1:
+                    st.caption("구분")
+                    st.write("**계약금(선금)**")
+                    st.write("")
+                    st.write("")
+                    st.write("**잔금**")
+                with mc2:
+                    st.caption("당초 금액 및 지급 기한")
+                    orig_prepay = st.number_input(
+                        "당초 선금", min_value=0, value=0, step=10000
+                    )
+                    orig_p_date = st.date_input("당초 선금 지급기한", key="opd")
+                    orig_balance = st.number_input(
+                        "당초 잔금", min_value=0, value=0, step=10000
+                    )
+                    orig_b_date = st.date_input("당초 잔금 지급기한", key="obd")
+
+                    orig_p_date_str = orig_p_date.strftime("%Y년 %m월 %d일")
+                    orig_b_date_str = orig_b_date.strftime("%Y년 %m월 %d일")
+
+                with mc3:
+                    st.caption("변경 금액 및 지급 기한")
+                    new_prepay = st.number_input(
+                        "변경 선금", min_value=0, value=0, step=10000
+                    )
+                    new_p_date = st.date_input("변경 선금 지급기한", key="npd")
+                    new_balance = st.number_input(
+                        "변경 잔금", min_value=0, value=0, step=10000
+                    )
+                    new_b_date = st.date_input("변경 잔금 지급기한", key="nbd")
+
+                    new_p_date_str = new_p_date.strftime("%Y년 %m월 %d일")
+                    new_b_date_str = new_b_date.strftime("%Y년 %m월 %d일")
+
+                st.write("")
+                pc1, pc2 = st.columns(2)
+                with pc1:
+                    paid_prepay_val = st.number_input(
+                        "이미 지급 완료된 선금 금액", min_value=0, value=0
+                    )
+                    paid_prepay_kr = format_ko_money(paid_prepay_val)
+                with pc2:
+                    paid_date = st.date_input("선금 지급 완료일자")
+                    paid_date_str = paid_date.strftime("%Y년 %m월 %d일")
 
             st.divider()
 
@@ -315,7 +361,7 @@ elif st.session_state.step == 2:
                 )
             st.divider()
 
-        # 3. 목적물 납기일 변경 (orig_delivery_ymd -> new_delivery_ymd 세팅)
+        # 3. 목적물 납기일 변경
         orig_del_ymd_str, new_del_ymd_str = "-", "-"
         if "3. 목적물 납기일 변경" in selected_changes:
             st.markdown("#### 📅 [변경 내용 3] 목적물 납기일 변경")
@@ -328,12 +374,11 @@ elif st.session_state.step == 2:
                 new_del_ymd_str = new_del_date.strftime("%Y년 %m월 %d일")
             st.divider()
 
-        # 변경계약 전용 컨텍스트 dictionary 구성
         amend_context_extra = {
             "original_period": original_period,
             "amend_period": amend_period_date.strftime("%Y년 %m월 %d일"),
-            "orig_prepay": f"{orig_prepay:,}",
-            "new_prepay": f"{new_prepay:,}",
+            "orig_prepay": f"{orig_prepay:,}" if orig_prepay > 0 else "0",
+            "new_prepay": f"{new_prepay:,}" if new_prepay > 0 else "0",
             "orig_prepay_date": orig_p_date_str,
             "new_prepay_date": new_p_date_str,
             "orig_balance": f"{orig_balance:,}",
@@ -425,7 +470,9 @@ elif st.session_state.step == 2:
         st.divider()
 
     # --- [D. 상대방 및 계좌 정보] ---
-    st.subheader("🏢 상대방 및 계좌 정보")
+    st.subheader("🏢 상대방 정보")
+
+    bank, bank_account, account_holder = "", "", ""
 
     if st.session_state.contract_party == "individual":
         l_name, l_info, l_addr = (
@@ -440,15 +487,20 @@ elif st.session_state.step == 2:
             "수급사업자 주소",
         )
 
-    col3, col4 = st.columns(2)
-    with col3:
+    if st.session_state.contract_type == "corp_amend":
         partner_name = st.text_input(l_name)
         partner_info = st.text_input(l_info)
         partner_address = st.text_input(l_addr)
-    with col4:
-        bank = st.text_input("지급 은행")
-        bank_account = st.text_input("계좌번호")
-        account_holder = st.text_input("예금주")
+    else:
+        col3, col4 = st.columns(2)
+        with col3:
+            partner_name = st.text_input(l_name)
+            partner_info = st.text_input(l_info)
+            partner_address = st.text_input(l_addr)
+        with col4:
+            bank = st.text_input("지급 은행")
+            bank_account = st.text_input("계좌번호")
+            account_holder = st.text_input("예금주")
 
     # --- [E. 요약 테이블] ---
     st.divider()
@@ -457,18 +509,24 @@ elif st.session_state.step == 2:
     if st.session_state.contract_type == "corp_annual":
         summary_amount_str = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
         summary_delivery_str = "개별계약에 따름"
+        summary_period_str = f"{contract_start} ~ 대금 지급 완료시까지"
+        summary_bank_str = f"{bank} {bank_account} (예금주: {account_holder})"
     elif st.session_state.contract_type == "corp_amend":
-        summary_amount_str = "변경계약서 항목별 금액 적용"
+        summary_amount_str = "변경계약서 표 참조"
         summary_delivery_str = (
-            amend_context_extra.get("new_delivery_ymd", "-")
+            amend_context_extra.get("new_delivery_ymd", "원계약 조건 따름")
             if amend_context_extra.get("new_delivery_ymd") != "-"
-            else f"{delivery_date_val}"
+            else "원계약 조건 따름"
         )
+        summary_period_str = f"변경 계약일: {amend_context_extra.get('amend_period', '-')}"
+        summary_bank_str = "원계약 계좌 적용 (입력 생략)"
     else:
         summary_amount_str = f"{amount_val:,}원 ({amount_kr})"
         if prepay_val > 0:
             summary_amount_str += f"<br>- 선금: {prepay_val:,}원 ({prepay_rate})<br>- 잔금: {balance_val:,}원 ({balance_rate})"
         summary_delivery_str = f"{delivery_date_val}"
+        summary_period_str = f"{contract_start} ~ 대금 지급 완료시까지"
+        summary_bank_str = f"{bank} {bank_account} (예금주: {account_holder})"
 
     summary_data = [
         {"항목": "프로젝트명", "내용": project_name},
@@ -476,15 +534,9 @@ elif st.session_state.step == 2:
         {"항목": "계약건명", "내용": contract_title},
         {"항목": "계약 상대방", "내용": partner_name},
         {"항목": "총 계약금액", "내용": summary_amount_str},
-        {
-            "항목": "계약 기간",
-            "내용": f"{contract_start} ~ 대금 지급 완료시까지",
-        },
+        {"항목": "계약 기간/일자", "내용": summary_period_str},
         {"항목": "납품예정일자", "내용": summary_delivery_str},
-        {
-            "항목": "지급 계좌",
-            "내용": f"{bank} {bank_account} (예금주: {account_holder})",
-        },
+        {"항목": "지급 계좌", "내용": summary_bank_str},
     ]
 
     table_html = "<table style='width:100%; border-collapse:collapse; margin-bottom:1.5rem;'>"
@@ -550,11 +602,13 @@ elif st.session_state.step == 2:
                 if st.session_state.contract_type == "corp_annual":
                     delivery_str = "개별계약에 따름"
                     amount_display = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
+                    start_str = contract_start.strftime(date_fmt)
                 elif st.session_state.contract_type == "corp_amend":
                     delivery_str = amend_context_extra.get(
                         "new_delivery_ymd", "개별계약에 따름"
                     )
                     amount_display = "변경계약서 표 참조"
+                    start_str = "-"
                 else:
                     delivery_str = (
                         delivery_date_val.strftime(date_fmt)
@@ -562,15 +616,15 @@ elif st.session_state.step == 2:
                         else "개별계약에 따름"
                     )
                     amount_display = f"{amount_val:,}"
+                    start_str = contract_start.strftime(date_fmt)
 
-                # 공통 데이터 딕셔너리
                 context = {
                     "project_name": project_name,
                     "project_code": project_code,
                     "contract_title": contract_title,
                     "amount_val": amount_display,
                     "amount_kr": amount_kr,
-                    "contract_start": contract_start.strftime(date_fmt),
+                    "contract_start": start_str,
                     "delivery_date": delivery_str,
                     "partner_name": partner_name,
                     "partner_address": partner_address,
@@ -591,13 +645,12 @@ elif st.session_state.step == 2:
                         if balance_date
                         else "-"
                     ),
-                    # 양쪽 공백 포함 태그 대응
                     " project_name ": project_name,
                     " project_code ": project_code,
                     " contract_title ": contract_title,
                     " amount_val ": amount_display,
                     " amount_kr ": amount_kr,
-                    " contract_start ": contract_start.strftime(date_fmt),
+                    " contract_start ": start_str,
                     " delivery_date ": delivery_str,
                     " partner_name ": partner_name,
                     " partner_address ": partner_address,
@@ -620,7 +673,6 @@ elif st.session_state.step == 2:
                     ),
                 }
 
-                # 변경계약 전용 변수 병합
                 if st.session_state.contract_type == "corp_amend":
                     context.update(amend_context_extra)
                     for k, v in list(amend_context_extra.items()):
@@ -637,7 +689,14 @@ elif st.session_state.step == 2:
                 bio = io.BytesIO()
                 doc.save(bio)
 
-                file_string_date = contract_start.strftime("%Y%m%d")
+                file_string_date = (
+                    amend_context_extra.get("amend_period", "")
+                    .replace("년 ", "")
+                    .replace("월 ", "")
+                    .replace("일", "")
+                    if st.session_state.contract_type == "corp_amend"
+                    else contract_start.strftime("%Y%m%d")
+                )
                 st.session_state.generated_doc = {
                     "name": f"{project_name}_{partner_name}_{file_string_date}.docx",
                     "data": bio.getvalue(),

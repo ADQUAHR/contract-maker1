@@ -171,9 +171,38 @@ elif st.session_state.step == 2:
 
     st.divider()
 
-    # --- [A. 계약 금액 및 프로젝트 정보] ---
-    st.subheader("💰 계약 금액 및 프로젝트 정보")
+    # --- [A. 프로젝트 정보 및 계약 금액] ---
+    st.subheader("💰 프로젝트 정보 및 계약 금액")
 
+    # 1행: 프로젝트명 / 계약시작일
+    col_p1, col_p2 = st.columns(2)
+    with col_p1:
+        project_name = st.text_input("프로젝트명")
+    with col_p2:
+        contract_start = st.date_input("계약 시작일")
+
+    # 2행: 프로젝트코드 / 납품예정일
+    col_c1, col_c2 = st.columns(2)
+    with col_c1:
+        project_code = st.text_input("프로젝트코드 (숫자 10자리)")
+        if project_code and (
+            not project_code.isdigit() or len(project_code) != 10
+        ):
+            st.warning("⚠️ 프로젝트코드는 숫자 10자리로 정확하게 입력해주세요.")
+    with col_c2:
+        if st.session_state.contract_type == "corp_annual":
+            st.text_input(
+                "납품 예정일", value="개별계약에 따름", disabled=True
+            )
+            delivery_date_val = None
+        else:
+            delivery_date_val = st.date_input("납품 예정일")
+
+    # 3행: 계약건명 (단독 1줄)
+    contract_title = st.text_input("계약건명")
+
+    # 4행: 총 계약금액 (가장 하단배치)
+    st.write("")
     if st.session_state.contract_type == "corp_annual":
         annual_amount_msg = (
             "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
@@ -181,7 +210,6 @@ elif st.session_state.step == 2:
         st.text_input("총 계약금액", value=annual_amount_msg, disabled=True)
         amount_val = 0
         amount_kr = annual_amount_msg
-
     else:
         amt_col1, amt_col2, amt_col3 = st.columns(3)
         with amt_col1:
@@ -195,27 +223,6 @@ elif st.session_state.step == 2:
         with amt_col3:
             amount_kr = format_ko_money(amount_val)
             st.text_input("총 계약금액 (한글)", value=amount_kr, disabled=True)
-
-    col1, col2 = st.columns(2)
-    with col1:
-        project_name = st.text_input("프로젝트명")
-        project_code = st.text_input("프로젝트코드 (숫자 10자리)")
-        if project_code and (
-            not project_code.isdigit() or len(project_code) != 10
-        ):
-            st.warning("⚠️ 프로젝트코드는 숫자 10자리로 정확하게 입력해주세요.")
-
-        contract_title = st.text_input("계약건명")
-    with col2:
-        contract_start = st.date_input("계약 시작일")
-
-        if st.session_state.contract_type == "corp_annual":
-            st.text_input(
-                "납품 예정일", value="개별계약에 따름", disabled=True
-            )
-            delivery_date_val = None
-        else:
-            delivery_date_val = st.date_input("납품 예정일")
 
     st.divider()
 

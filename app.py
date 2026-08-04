@@ -61,7 +61,6 @@ st.divider()
 if st.session_state.step == 1:
     st.subheader("❓ 계약 유형을 확인합니다.")
 
-    # [1번 질문]
     party_choice = st.radio(
         "1. 계약 대상 주체가 누구인가요?",
         ["🔽 선택해 주세요", "법인/사업자 (사업자등록 보유)", "개인 (사업자등록 미보유)"],
@@ -69,13 +68,9 @@ if st.session_state.step == 1:
         key="q_party",
     )
 
-    # 1번이 선택되었을 때만 이후 단계 진행
     if party_choice != "🔽 선택해 주세요":
-
-        # ─── 법인/사업자 분기 ───
         if "법인" in party_choice:
             st.divider()
-            # [2번 질문]
             nature_choice = st.radio(
                 "2. 계약의 성격이 무엇입니까?",
                 [
@@ -86,7 +81,6 @@ if st.session_state.step == 1:
                 index=0,
             )
 
-            # 2번이 선택되었을 때만 다음 진입
             if nature_choice != "🔽 선택해 주세요":
                 st.divider()
 
@@ -97,7 +91,6 @@ if st.session_state.step == 1:
                     )
 
                 elif "신규" in nature_choice:
-                    # [3번 질문]
                     is_annual_target = st.radio(
                         "3. 해당 업체와 이미 [기본계약_연간계약]을 체결한 상태입니까?",
                         [
@@ -113,7 +106,6 @@ if st.session_state.step == 1:
                         "https://docs.google.com/spreadsheets/d/1ZKkxw6tqTa5d8BHi0ASYwMjW8WC3kawq1SNT6V7VRTk/edit?gid=0#gid=0",
                     )
 
-                    # 3번이 선택되었을 때만 다음 진입
                     if is_annual_target != "🔽 선택해 주세요":
                         st.divider()
                         if "예" in is_annual_target:
@@ -122,7 +114,6 @@ if st.session_state.step == 1:
                                 "✅ **[개별계약서 (기존 연간계약 체결 완료)]** 양식이 최종 확정되었습니다."
                             )
                         else:
-                            # 4번 질문 분기
                             st.warning(
                                 "⚠️ 기본계약 미체결 업체입니다. 새로 체결할 계약 형식을 선택하세요."
                             )
@@ -141,7 +132,6 @@ if st.session_state.step == 1:
             st.session_state.contract_type = "individual"
             st.info("✅ **[개인 외주계약서]** 양식이 적용됩니다.")
 
-        # 최종 이동 버튼은 1번이라도 선택되어야 하단에 등장
         st.write("")
         if st.button(
             "정보 입력 단계로 이동 ➡️", type="primary", use_container_width=True
@@ -171,17 +161,15 @@ elif st.session_state.step == 2:
 
     st.divider()
 
-    # --- [A. 프로젝트 정보 및 계약 금액] ---
-    st.subheader("💰 프로젝트 정보 및 계약 금액")
+    # --- [A. 프로젝트 정보 및 기본계약 정보] ---
+    st.subheader("💰 프로젝트 정보 및 계약 정보")
 
-    # 1행: 프로젝트명 / 계약시작일
     col_p1, col_p2 = st.columns(2)
     with col_p1:
         project_name = st.text_input("프로젝트명")
     with col_p2:
         contract_start = st.date_input("계약 시작일")
 
-    # 2행: 프로젝트코드 / 납품예정일
     col_c1, col_c2 = st.columns(2)
     with col_c1:
         project_code = st.text_input("프로젝트코드 (숫자 10자리)")
@@ -198,35 +186,172 @@ elif st.session_state.step == 2:
         else:
             delivery_date_val = st.date_input("납품 예정일")
 
-    # 3행: 계약건명 (단독 1줄)
     contract_title = st.text_input("계약건명")
 
-    # 4행: 총 계약금액 (가장 하단배치)
-    st.write("")
-    if st.session_state.contract_type == "corp_annual":
-        annual_amount_msg = (
-            "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
-        )
-        st.text_input("총 계약금액", value=annual_amount_msg, disabled=True)
-        amount_val = 0
-        amount_kr = annual_amount_msg
-    else:
-        amt_col1, amt_col2, amt_col3 = st.columns(3)
-        with amt_col1:
-            amount_val = st.number_input(
-                "총 계약금액 (숫자)", min_value=0, step=1000
+    # 신규/연간계약인 경우에만 일반 총 계약금액 입력란 표시
+    amount_val = 0
+    amount_kr = ""
+    if st.session_state.contract_type != "corp_amend":
+        st.write("")
+        if st.session_state.contract_type == "corp_annual":
+            annual_amount_msg = (
+                "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
             )
-        with amt_col2:
-            st.text_input(
-                "입력된 금액 (콤마)", value=f"{amount_val:,}원", disabled=True
-            )
-        with amt_col3:
-            amount_kr = format_ko_money(amount_val)
-            st.text_input("총 계약금액 (한글)", value=amount_kr, disabled=True)
+            st.text_input("총 계약금액", value=annual_amount_msg, disabled=True)
+            amount_kr = annual_amount_msg
+        else:
+            amt_col1, amt_col2, amt_col3 = st.columns(3)
+            with amt_col1:
+                amount_val = st.number_input(
+                    "총 계약금액 (숫자)", min_value=0, step=1000
+                )
+            with amt_col2:
+                st.text_input(
+                    "입력된 금액 (콤마)", value=f"{amount_val:,}원", disabled=True
+                )
+            with amt_col3:
+                amount_kr = format_ko_money(amount_val)
+                st.text_input(
+                    "총 계약금액 (한글)", value=amount_kr, disabled=True
+                )
 
     st.divider()
 
-    # --- [B. 상세 정보 입력 폼] ---
+    # --- [B. 변경계약 전용 입력 구역 (corp_amend)] ---
+    amend_context_extra = {}
+
+    if st.session_state.contract_type == "corp_amend":
+        st.subheader("📑 변경계약 세부 정보")
+
+        col_m1, col_m2 = st.columns(2)
+        with col_m1:
+            original_period = st.text_input(
+                "원계약 체결일자/기간", placeholder="예: 2026년 01월 15일"
+            )
+        with col_m2:
+            amend_period_date = st.date_input("변경 계약일자")
+
+        st.write("")
+        selected_changes = st.multiselect(
+            "🛠️ 변경이 발생하는 항목을 선택하세요 (다중 선택 가능)",
+            ["1. 계약 금액 변경", "2. 계약 내용(과업) 변경", "3. 목적물 납기일 변경"],
+            default=["1. 계약 금액 변경"],
+        )
+
+        st.divider()
+
+        # 1. 계약 금액 변경
+        orig_prepay, new_prepay = 0, 0
+        orig_balance, new_balance = 0, 0
+        orig_p_date_str, new_p_date_str = "-", "-"
+        orig_b_date_str, new_b_date_str = "-", "-"
+        paid_prepay_val = 0
+        paid_prepay_kr = "영원"
+        paid_date_str = "-"
+
+        if "1. 계약 금액 변경" in selected_changes:
+            st.markdown("#### 💰 [변경 내용 1] 계약 금액 변경")
+            mc1, mc2, mc3 = st.columns([1.5, 3, 3])
+            with mc1:
+                st.caption("구분")
+                st.write("**계약금(선금)**")
+                st.write("")
+                st.write("")
+                st.write("**잔금**")
+            with mc2:
+                st.caption("당초 금액 및 지급 기한")
+                orig_prepay = st.number_input(
+                    "당초 선금", min_value=0, value=0, step=10000
+                )
+                orig_p_date = st.date_input("당초 선금 지급기한", key="opd")
+                orig_balance = st.number_input(
+                    "당초 잔금", min_value=0, value=0, step=10000
+                )
+                orig_b_date = st.date_input("당초 잔금 지급기한", key="obd")
+
+                orig_p_date_str = orig_p_date.strftime("%Y년 %m월 %d일")
+                orig_b_date_str = orig_b_date.strftime("%Y년 %m월 %d일")
+
+            with mc3:
+                st.caption("변경 금액 및 지급 기한")
+                new_prepay = st.number_input(
+                    "변경 선금", min_value=0, value=0, step=10000
+                )
+                new_p_date = st.date_input("변경 선금 지급기한", key="npd")
+                new_balance = st.number_input(
+                    "변경 잔금", min_value=0, value=0, step=10000
+                )
+                new_b_date = st.date_input("변경 잔금 지급기한", key="nbd")
+
+                new_p_date_str = new_p_date.strftime("%Y년 %m월 %d일")
+                new_b_date_str = new_b_date.strftime("%Y년 %m월 %d일")
+
+            st.write("")
+            pc1, pc2 = st.columns(2)
+            with pc1:
+                paid_prepay_val = st.number_input(
+                    "이미 지급 완료된 선금 금액", min_value=0, value=0
+                )
+                paid_prepay_kr = format_ko_money(paid_prepay_val)
+            with pc2:
+                paid_date = st.date_input("선금 지급 완료일자")
+                paid_date_str = paid_date.strftime("%Y년 %m월 %d일")
+
+            st.divider()
+
+        # 2. 계약 내용(과업) 변경
+        orig_task_str, new_task_str = "-", "-"
+        if "2. 계약 내용(과업) 변경" in selected_changes:
+            st.markdown("#### 📝 [변경 내용 2] 계약 내용(과업) 변경")
+            tc1, tc2 = st.columns(2)
+            with tc1:
+                orig_task_str = st.text_area(
+                    "'원계약' 과업 내용",
+                    placeholder="기존 계약상의 과업 범위를 입력하세요.",
+                )
+            with tc2:
+                new_task_str = st.text_area(
+                    "'변경' 과업 내용", placeholder="변경되는 과업 범위를 입력하세요."
+                )
+            st.divider()
+
+        # 3. 목적물 납기일 변경 (orig_delivery_ymd -> new_delivery_ymd 세팅)
+        orig_del_ymd_str, new_del_ymd_str = "-", "-"
+        if "3. 목적물 납기일 변경" in selected_changes:
+            st.markdown("#### 📅 [변경 내용 3] 목적물 납기일 변경")
+            dc1, dc2 = st.columns(2)
+            with dc1:
+                orig_del_date = st.date_input("당초 목적물 납기일")
+                orig_del_ymd_str = orig_del_date.strftime("%Y년 %m월 %d일")
+            with dc2:
+                new_del_date = st.date_input("변경 목적물 납기일")
+                new_del_ymd_str = new_del_date.strftime("%Y년 %m월 %d일")
+            st.divider()
+
+        # 변경계약 전용 컨텍스트 dictionary 구성
+        amend_context_extra = {
+            "original_period": original_period,
+            "amend_period": amend_period_date.strftime("%Y년 %m월 %d일"),
+            "orig_prepay": f"{orig_prepay:,}",
+            "new_prepay": f"{new_prepay:,}",
+            "orig_prepay_date": orig_p_date_str,
+            "new_prepay_date": new_p_date_str,
+            "orig_balance": f"{orig_balance:,}",
+            "new_balance": f"{new_balance:,}",
+            "orig_balance_date": orig_b_date_str,
+            "new_balance_date": new_b_date_str,
+            "orig_total": f"{(orig_prepay + orig_balance):,}",
+            "new_total": f"{(new_prepay + new_balance):,}",
+            "already_paid_prepay": f"{paid_prepay_val:,}",
+            "already_paid_kr": paid_prepay_kr,
+            "already_paid_ymd": paid_date_str,
+            "orig_task": orig_task_str,
+            "new_task": new_task_str,
+            "orig_delivery_ymd": orig_del_ymd_str,
+            "new_delivery_ymd": new_del_ymd_str,
+        }
+
+    # --- [C. 일반 대금 지급 세부 일정 (신규 계약 전용)] ---
     prepay_val = 0
     balance_val = 0
     prepay_rate = "0%"
@@ -236,11 +361,12 @@ elif st.session_state.step == 2:
 
     if (
         st.session_state.contract_party == "corporation"
-        and st.session_state.contract_type != "corp_annual"
+        and st.session_state.contract_type
+        not in ["corp_annual", "corp_amend"]
     ):
         st.subheader("💵 대금 지급 세부 일정")
         st.caption(
-            "선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 0을 입력해주세요. 선금+잔금의 합은 총 계약금액과 일치해야 합니다."
+            "선금을 입력 후 엔터를 치면 선금 청구기일이 생성됩니다. 선금 지급액이 없으면 0을 입력해주세요."
         )
 
         p_col1, p_col2, p_col3, p_col4 = st.columns([3, 1.5, 3, 1.5])
@@ -298,7 +424,7 @@ elif st.session_state.step == 2:
 
         st.divider()
 
-    # --- [C. 상대방 및 계좌 정보] ---
+    # --- [D. 상대방 및 계좌 정보] ---
     st.subheader("🏢 상대방 및 계좌 정보")
 
     if st.session_state.contract_party == "individual":
@@ -324,13 +450,20 @@ elif st.session_state.step == 2:
         bank_account = st.text_input("계좌번호")
         account_holder = st.text_input("예금주")
 
-    # --- [D. 요약 테이블] ---
+    # --- [E. 요약 테이블] ---
     st.divider()
     st.subheader("📋 입력 정보 요약 확인")
 
     if st.session_state.contract_type == "corp_annual":
         summary_amount_str = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
         summary_delivery_str = "개별계약에 따름"
+    elif st.session_state.contract_type == "corp_amend":
+        summary_amount_str = "변경계약서 항목별 금액 적용"
+        summary_delivery_str = (
+            amend_context_extra.get("new_delivery_ymd", "-")
+            if amend_context_extra.get("new_delivery_ymd") != "-"
+            else f"{delivery_date_val}"
+        )
     else:
         summary_amount_str = f"{amount_val:,}원 ({amount_kr})"
         if prepay_val > 0:
@@ -370,10 +503,11 @@ elif st.session_state.step == 2:
         "📄 위 내용으로 계약서 생성하기", type="primary", use_container_width=True
     )
 
-    # --- [E. 생성 및 검증 로직] ---
+    # --- [F. 생성 및 검증 로직] ---
     if submitted:
         is_amount_invalid = (
-            st.session_state.contract_type != "corp_annual"
+            st.session_state.contract_type
+            not in ["corp_annual", "corp_amend"]
         ) and (amount_val == 0)
 
         if not project_name or not partner_name or is_amount_invalid:
@@ -386,7 +520,8 @@ elif st.session_state.step == 2:
 
         elif (
             st.session_state.contract_party == "corporation"
-            and st.session_state.contract_type != "corp_annual"
+            and st.session_state.contract_type
+            not in ["corp_annual", "corp_amend"]
             and (prepay_val + balance_val != amount_val)
         ):
             st.error(
@@ -415,6 +550,11 @@ elif st.session_state.step == 2:
                 if st.session_state.contract_type == "corp_annual":
                     delivery_str = "개별계약에 따름"
                     amount_display = "계약금액은 [별첨1]의 기본단가표를 근거로 각 개별계약에 따라 산정된다."
+                elif st.session_state.contract_type == "corp_amend":
+                    delivery_str = amend_context_extra.get(
+                        "new_delivery_ymd", "개별계약에 따름"
+                    )
+                    amount_display = "변경계약서 표 참조"
                 else:
                     delivery_str = (
                         delivery_date_val.strftime(date_fmt)
@@ -423,6 +563,7 @@ elif st.session_state.step == 2:
                     )
                     amount_display = f"{amount_val:,}"
 
+                # 공통 데이터 딕셔너리
                 context = {
                     "project_name": project_name,
                     "project_code": project_code,
@@ -450,6 +591,7 @@ elif st.session_state.step == 2:
                         if balance_date
                         else "-"
                     ),
+                    # 양쪽 공백 포함 태그 대응
                     " project_name ": project_name,
                     " project_code ": project_code,
                     " contract_title ": contract_title,
@@ -478,6 +620,12 @@ elif st.session_state.step == 2:
                     ),
                 }
 
+                # 변경계약 전용 변수 병합
+                if st.session_state.contract_type == "corp_amend":
+                    context.update(amend_context_extra)
+                    for k, v in list(amend_context_extra.items()):
+                        context[f" {k} "] = v
+
                 if st.session_state.contract_party == "individual":
                     context["partner_birth"] = partner_info
                     context[" partner_birth "] = partner_info
@@ -494,9 +642,7 @@ elif st.session_state.step == 2:
                     "name": f"{project_name}_{partner_name}_{file_string_date}.docx",
                     "data": bio.getvalue(),
                 }
-                st.success(
-                    "🎉 계약서 생성이 완료되었습니다! 계약서 초안을 다운받은 후 [별첨1]을 추가로 작성해서 마무리해주세요."
-                )
+                st.success("🎉 변경계약서 생성이 완료되었습니다!")
                 st.rerun()
 
             except Exception as e:
@@ -504,7 +650,7 @@ elif st.session_state.step == 2:
 
 
 # ---------------------------------------------------------
-# [마지막] 다운로드 버튼 독립 배치
+# [마지막] 다운로드 버튼
 # ---------------------------------------------------------
 if st.session_state.generated_doc:
     st.write("")

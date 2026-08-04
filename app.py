@@ -692,7 +692,7 @@ elif st.session_state.step == 2:
 # ---------------------------------------------------------
 if st.session_state.generated_doc:
     st.write("")
-    st.warning("⚠️ 계약서 초안 다운로드 후 최초견적서 혹은 변경견적서를 [별첨1]에 추가해주세요.")
+    st.warning("⚠️ 계약서 초안 다운로드 후 [별첨1_세부 용역 내역 및 추가 특약사항]을 추가 작성해주세요.")
     st.download_button(
         label="📥 계약서초안 다운로드",
         data=st.session_state.generated_doc["data"],

@@ -238,7 +238,6 @@ elif st.session_state.step == 2:
 
         col_m1, col_m2 = st.columns(2)
         with col_m1:
-            # 💡 [수정] 원계약 체결일자 달력선택 형태로 변경
             orig_period_date = st.date_input("원계약 체결일자")
             original_period_str = orig_period_date.strftime("%Y년 %m월 %d일")
         with col_m2:
@@ -258,9 +257,6 @@ elif st.session_state.step == 2:
         orig_balance, new_balance = 0, 0
         orig_p_date_str, new_p_date_str = "-", "-"
         orig_b_date_str, new_b_date_str = "-", "-"
-        paid_prepay_val = 0
-        paid_prepay_kr = "영원"
-        paid_date_str = "-"
 
         if "1. 계약 금액 변경" in selected_changes:
             st.markdown("#### 💰 [변경 내용 1] 계약 금액 변경")
@@ -329,17 +325,6 @@ elif st.session_state.step == 2:
                     new_p_date_str = new_p_date.strftime("%Y년 %m월 %d일")
                     new_b_date_str = new_b_date.strftime("%Y년 %m월 %d일")
 
-                st.write("")
-                pc1, pc2 = st.columns(2)
-                with pc1:
-                    paid_prepay_val = st.number_input(
-                        "이미 지급 완료된 선금 금액", min_value=0, value=0
-                    )
-                    paid_prepay_kr = format_ko_money(paid_prepay_val)
-                with pc2:
-                    paid_date = st.date_input("선금 지급 완료일자")
-                    paid_date_str = paid_date.strftime("%Y년 %m월 %d일")
-
             st.divider()
 
         # 2. 계약 내용(과업) 변경
@@ -384,9 +369,6 @@ elif st.session_state.step == 2:
             "new_balance_date": new_b_date_str,
             "orig_total": f"{(orig_prepay + orig_balance):,}",
             "new_total": f"{(new_prepay + new_balance):,}",
-            "already_paid_prepay": f"{paid_prepay_val:,}",
-            "already_paid_kr": paid_prepay_kr,
-            "already_paid_ymd": paid_date_str,
             "orig_task": orig_task_str,
             "new_task": new_task_str,
             "orig_delivery_ymd": orig_del_ymd_str,

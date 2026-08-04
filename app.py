@@ -1,7 +1,6 @@
 from datetime import datetime
 import io
 import pandas as pd
-import requests
 import streamlit as st
 from docxtpl import DocxTemplate
 
@@ -27,34 +26,6 @@ def format_ko_money(num):
         return f"{res}원"
     except Exception:
         return "영원"
-
-
-# --- [아마란스 10 ERP 거래처 조회 함수] ---
-def fetch_amaranth_company(company_keyword):
-    # FSN 아마란스 10 ERP 도메인 주소
-    BASE_URL = "https://gw.fsn.co.kr"
-    API_PATH = "/apiproxy/api16S08"  # 회사등록조회 API
-
-    headers = {
-        "AccessToken": "rBTUrWZA4klwucYIrVoyqlb9dzC37z",
-        "HashKey": "80338340471996318389875569045954485561741835",
-        "Content-Type": "application/json; charset=utf-8",
-    }
-
-    params = {"CO_NM": company_keyword}
-
-    try:
-        response = requests.get(
-            BASE_URL + API_PATH, headers=headers, params=params, timeout=5
-        )
-        if response.status_code == 200:
-            return response.json()
-        else:
-            st.error(f"⚠️ ERP 통신 실패 (상태코드: {response.status_code})")
-            return None
-    except Exception as e:
-        st.error(f"⚠️ API 연결 오류: {e}")
-        return None
 
 
 # 1. 화면 설정
@@ -329,50 +300,22 @@ elif st.session_state.step == 2:
             "생년월일 (예: 1990.01.01)",
             "계약자 주소",
         )
-
-        col3, col4 = st.columns(2)
-        with col3:
-            partner_name = st.text_input(l_name)
-            partner_info = st.text_input(l_info)
-            partner_address = st.text_input(l_addr)
-        with col4:
-            bank = st.text_input("지급 은행")
-            bank_account = st.text_input("계좌번호")
-            account_holder = st.text_input("예금주")
-
     else:
-        # 🏢 법인/사업자 - 아마란스 10 API 연동 구역
         l_name, l_info, l_addr = (
             "수급사업자 회사명",
             "대표이사 성함",
             "수급사업자 주소",
         )
 
-        search_col1, search_col2 = st.columns([3, 1])
-        with search_col1:
-            search_keyword = st.text_input(
-                "🔍 ERP 거래처 검색 (회사명)", placeholder="예: 더존비즈온"
-            )
-        with search_col2:
-            st.write("")
-            st.write("")
-            btn_search = st.button("ERP 정보 가져오기", use_container_width=True)
-
-        if btn_search and search_keyword:
-            with st.spinner("Amaranth 10 ERP에서 거래처 정보를 조회하는 중..."):
-                erp_result = fetch_amaranth_company(search_keyword)
-                if erp_result:
-                    st.success("✅ ERP에서 정보를 가져왔습니다.")
-
-        col3, col4 = st.columns(2)
-        with col3:
-            partner_name = st.text_input(l_name, key="partner_name_input")
-            partner_info = st.text_input(l_info, key="partner_info_input")
-            partner_address = st.text_input(l_addr, key="partner_addr_input")
-        with col4:
-            bank = st.text_input("지급 은행")
-            bank_account = st.text_input("계좌번호")
-            account_holder = st.text_input("예금주")
+    col3, col4 = st.columns(2)
+    with col3:
+        partner_name = st.text_input(l_name)
+        partner_info = st.text_input(l_info)
+        partner_address = st.text_input(l_addr)
+    with col4:
+        bank = st.text_input("지급 은행")
+        bank_account = st.text_input("계좌번호")
+        account_holder = st.text_input("예금주")
 
     # --- [D. 요약 테이블] ---
     st.divider()
